@@ -63,42 +63,33 @@ export default function FaqPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(faqStructuredData) }}
       />
-      <section className="public-feature">
-        <div
-          className="feature-copy"
-          style={{ maxWidth: 720, margin: "0 auto", padding: "3.5rem 1.5rem 4rem" }}
-        >
-          <p style={{ marginBottom: "2rem" }}>
-            <Link href="/" style={{ fontWeight: 700 }}>
-              ← Back to Jack&apos;s Cookies
-            </Link>
-          </p>
-          <p className="public-kicker">Good Questions</p>
-          <h2 style={{ marginBottom: "1.5rem" }}>
-            Frequently asked questions
-          </h2>
-          {faqs.map((f) => (
-            <div key={f.q} style={{ marginBottom: "1.75rem" }}>
-              <h3 style={{ margin: "0 0 .4rem", fontSize: "1.15rem" }}>{f.q}</h3>
-              <p style={{ margin: 0 }}>{f.a}</p>
-            </div>
-          ))}
-          <p style={{ marginTop: "2.5rem" }}>
-            Ready for warm cookies?{" "}
-            <Link href="/#order" style={{ color: "#e66113", fontWeight: 700 }}>
-              Order The Everyday
-            </Link>{" "}
-            — or read{" "}
-            <Link
-              href="/blog/the-everyday-story"
-              style={{ color: "#e66113", fontWeight: 700 }}
-            >
-              how hemp seeds created our cookie
-            </Link>
-            .
-          </p>
-        </div>
-      </section>
+      <div className="subpage">
+        <Link className="subpage-back" href="/">
+          ← Back to Jack&apos;s Cookies
+        </Link>
+        <p className="public-kicker">Good Questions</p>
+        <h1>Frequently asked questions</h1>
+        <p className="byline">
+          Everything people ask us about the Everyday, ordering, and delivery.
+        </p>
+        {faqs.map((f) => (
+          <div key={f.q} className="faq-item">
+            <h2>{f.q}</h2>
+            <p>{f.a}</p>
+          </div>
+        ))}
+        <p className="subpage-cta">
+          Ready for warm cookies?{" "}
+          <Link href="/#order" className="inline-link">
+            Order The Everyday
+          </Link>{" "}
+          — or read{" "}
+          <Link href="/blog/the-everyday-story" className="inline-link">
+            how hemp seeds created our cookie
+          </Link>
+          .
+        </p>
+      </div>
       <footer className="public-footer">
         <div className="footer-brand">
           <Image
