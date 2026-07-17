@@ -29,7 +29,7 @@ export const metadata: Metadata = {
         url: "/og.jpg",
         width: 1200,
         height: 630,
-        alt: "A stack of Jack's Everyday organic chocolate chip cookies",
+        alt: "Jack's Cookies — retro cookie mascot and wordmark",
       },
     ],
   },
