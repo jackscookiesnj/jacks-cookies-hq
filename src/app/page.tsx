@@ -31,6 +31,7 @@ const structuredData = {
       servesCuisine: "Bakery",
       priceRange: "$",
       email: "JacksCookiesNJ@gmail.com",
+      telephone: "+1-646-899-5012",
       address: {
         "@type": "PostalAddress",
         addressLocality: "Red Bank",
