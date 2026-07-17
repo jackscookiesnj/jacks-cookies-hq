@@ -1,0 +1,9 @@
+# Jack's Cookies — jacks-cookies.com
+# Search engines and AI assistants welcome.
+
+User-agent: *
+Allow: /
+Disallow: /hq
+Disallow: /api/
+
+Sitemap: https://jacks-cookies.com/sitemap.xml
