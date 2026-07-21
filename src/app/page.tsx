@@ -134,7 +134,7 @@ export default function Home() {
               <i />
             </div>
             <h1>One Cookie. Done Right.</h1>
-            <p>The Everyday: our cookie jar staple.</p>
+            <p>The Everyday Chocolate Chip Cookie.</p>
             <div className="public-actions">
               <a className="public-button primary" href="#order">
                 Pre-Order Now
