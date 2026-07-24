@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { PublicOrderForm } from "@/components/public-order-form";
 
@@ -281,6 +282,67 @@ export default function Home() {
             <em>JacksCookiesNJ@gmail.com</em>
           </div>
         </div>
+      </section>
+
+      <section className="public-section" id="more" aria-label="More from Jack's Cookies">
+        <div className="section-heading">
+          <p className="public-kicker">More From Jack&apos;s Cookies</p>
+          <h2>Delivery, Questions &amp; the Journal</h2>
+          <p>
+            Jack&apos;s Cookies is a home-based cottage bakery in Red Bank, New
+            Jersey, in Monmouth County. These pages cover how pickup and local
+            delivery work, the questions we get asked most, and the story behind
+            The Everyday.
+          </p>
+        </div>
+        <ul className="more-links">
+          <li>
+            <Link href="/cookie-delivery-red-bank-nj">
+              Cookie delivery in Red Bank, NJ &amp; Monmouth County
+            </Link>
+            <span>
+              How pickup in Red Bank and local delivery across Monmouth County
+              work, our bake days, and ordering for events.
+            </span>
+          </li>
+          <li>
+            <Link href="/faq">
+              Frequently asked questions about ordering
+            </Link>
+            <span>
+              Where we are, what a cookie costs, how many you can order,
+              delivery, wholesale, hemp seeds, and how to tell us apart from
+              similarly named bakeries in other states.
+            </span>
+          </li>
+          <li>
+            <Link href="/blog/the-everyday-story">
+              How hemp seeds created The Everyday
+            </Link>
+            <span>
+              The origin story of our one cookie, written by founder Julianna
+              Levine.
+            </span>
+          </li>
+          <li>
+            <Link href="/blog/do-hemp-seed-cookies-get-you-high">
+              Do hemp seed cookies get you high? (No)
+            </Link>
+            <span>
+              Why the culinary hemp seeds in our chocolate chip cookies are a
+              food, not a drug.
+            </span>
+          </li>
+          <li>
+            <Link href="/blog/what-makes-a-chocolate-chip-cookie-organic">
+              What makes a chocolate chip cookie organic?
+            </Link>
+            <span>
+              What the word actually means on an ingredient list, and what we
+              look for when we buy.
+            </span>
+          </li>
+        </ul>
       </section>
 
       <footer className="public-footer">

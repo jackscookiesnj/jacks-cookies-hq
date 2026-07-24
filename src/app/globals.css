@@ -2670,3 +2670,38 @@ button {
 .subpage .inline-link:hover {
   color: var(--jc-orange-dark);
 }
+
+.more-links {
+  display: grid;
+  gap: 1.15rem;
+  max-width: 48rem;
+  margin: 2.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.more-links li {
+  display: grid;
+  gap: 0.3rem;
+  padding-left: 1rem;
+  border-left: 0.25rem solid var(--jc-orange);
+}
+
+.more-links a {
+  color: var(--jc-teal);
+  font-weight: 900;
+  font-size: 1.05rem;
+  text-decoration: none;
+}
+
+.more-links a:hover {
+  color: var(--jc-orange-dark);
+  text-decoration: underline;
+}
+
+.more-links span {
+  color: var(--jc-teal);
+  font-size: 0.9rem;
+  font-weight: 500;
+  opacity: 0.82;
+}

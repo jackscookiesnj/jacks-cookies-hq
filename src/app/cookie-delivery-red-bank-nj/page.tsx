@@ -43,8 +43,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title:
-    "Cookie Delivery in Red Bank, NJ & Monmouth County | Jack's Cookies",
+  title: "Cookie Delivery in Red Bank, NJ & Monmouth County",
   description:
     "Jack's Cookies delivers fresh-baked organic chocolate chip cookies across Monmouth County, NJ, with pickup in Red Bank. The Everyday is baked to order — never shipped from a warehouse. Order online at jacks-cookies.com.",
   alternates: {
