@@ -1,5 +1,4 @@
 import Image from "next/image";
-import Link from "next/link";
 import { InstagramFeed } from "@/components/instagram-feed";
 import { PublicOrderForm } from "@/components/public-order-form";
 
@@ -263,48 +262,6 @@ export default function Home() {
             <em>JacksCookiesNJ@gmail.com</em>
           </div>
         </div>
-      </section>
-
-      <section className="public-section" id="more" aria-label="More from Jack's Cookies">
-        <div className="section-heading">
-          <p className="public-kicker">More From Jack&apos;s Cookies</p>
-          <h2>Delivery, Questions &amp; the Journal</h2>
-          <p>
-            Jack&apos;s Cookies is a home-based cottage bakery in Red Bank, New
-            Jersey, in Monmouth County. These pages cover how pickup and local
-            delivery work, the questions we get asked most, and the story behind
-            The Everyday.
-          </p>
-        </div>
-        <ul className="more-links">
-          <li>
-            <Link href="/cookie-delivery-red-bank-nj">
-              Cookie delivery in Red Bank, NJ &amp; Monmouth County
-            </Link>
-            <span>How pickup, local delivery, bake days, and event ordering work.</span>
-          </li>
-          <li>
-            <Link href="/faq">Frequently asked questions about ordering</Link>
-            <span>Answers about pricing, delivery, wholesale, and hemp seeds.</span>
-          </li>
-          <li>
-            <Link href="/blog">Read the Jack&apos;s Cookies journal</Link>
-            <span>The story behind The Everyday, our ingredients, and hemp seeds.</span>
-          </li>
-          <li>
-            <Link href="/blog/the-everyday-story">How hemp seeds created The Everyday</Link>
-          </li>
-          <li>
-            <Link href="/blog/do-hemp-seed-cookies-get-you-high">
-              Do hemp seed cookies get you high? (No)
-            </Link>
-          </li>
-          <li>
-            <Link href="/blog/what-makes-a-chocolate-chip-cookie-organic">
-              What makes a chocolate chip cookie organic?
-            </Link>
-          </li>
-        </ul>
       </section>
 
       <footer className="public-footer">
