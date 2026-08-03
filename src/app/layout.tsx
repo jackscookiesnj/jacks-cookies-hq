@@ -26,10 +26,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/og.jpg",
-        width: 1200,
-        height: 630,
-        alt: "Jack's Cookies — retro cookie mascot and wordmark",
+        url: "/brand/rebrand/full-lockup.webp",
+        width: 3057,
+        height: 3194,
+        alt: "Jack's Cookies — The Everyday Chocolate Chip Cookie",
       },
     ],
   },
@@ -38,7 +38,7 @@ export const metadata: Metadata = {
     title: "Jack's Cookies — Organic Chocolate Chip Cookies in Red Bank, NJ",
     description:
       "The Everyday: an organic small-batch chocolate chip cookie with a hemp seed twist, baked fresh to order in Red Bank, NJ.",
-    images: ["/og.jpg"],
+    images: ["/brand/rebrand/full-lockup.webp"],
   },
 };
 

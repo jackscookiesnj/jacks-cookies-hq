@@ -76,6 +76,9 @@ export async function POST(request: Request) {
     await sendOrderNotification(payload, invoiceReference, revenue).catch((error) => {
       console.error("Order notification email failed", error);
     });
+    await sendCustomerConfirmation(payload, invoiceReference, revenue).catch((error) => {
+      console.error("Customer confirmation email failed", error);
+    });
 
     return NextResponse.json({
       ok: true,
@@ -262,6 +265,65 @@ async function sendOrderNotification(
   }
 }
 
+async function sendCustomerConfirmation(
+  payload: PublicOrderPayload,
+  invoiceReference: string,
+  revenue: number,
+) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const from = process.env.ORDER_NOTIFICATION_FROM ?? "Jack's Cookies <orders@jacks-cookies.com>";
+
+  if (!apiKey) return;
+
+  const isEvent = payload.mode === "event";
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      from,
+      to: payload.email,
+      subject: isEvent
+        ? "We got your Jack's Cookies event request"
+        : "We got your Jack's Cookies order request",
+      text: [
+        `Hi ${firstName(payload.name)},`,
+        "",
+        isEvent
+          ? "Thanks for thinking of Jack's Cookies for your event. We received your request and will email you soon to confirm availability, payment, and order details."
+          : "Thanks for ordering Jack's Cookies. We received your request and will email you soon to confirm payment and order details.",
+        "",
+        "Request details:",
+        `Reference: ${invoiceReference}`,
+        `Date: ${formatDate(payload.requestedDate)}`,
+        `Quantity: ${payload.quantity} cookies`,
+        `Total: $${revenue.toFixed(2)}`,
+        ...(isEvent
+          ? [
+              payload.occasion ? `Occasion: ${payload.occasion}` : "",
+              payload.eventLocation ? `Location: ${payload.eventLocation}` : "",
+              payload.eventStyle ? `Event style: ${eventStyleLabel(payload.eventStyle)}` : "",
+            ].filter(Boolean)
+          : [
+              `Pickup or delivery: ${payload.fulfillment === "delivery" ? "Local delivery" : "Pickup"}`,
+              payload.deliveryAddress ? `Delivery address: ${payload.deliveryAddress}` : "",
+            ].filter(Boolean)),
+        `Payment: ${paymentLabel(payload.payment)}`,
+        "",
+        "One cookie. Done right.",
+        "Jack's Cookies",
+      ].join("\n"),
+    }),
+  });
+
+  if (!response.ok) {
+    const detail = await response.text();
+    throw new Error(`Customer confirmation email failed: ${detail}`);
+  }
+}
+
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
 }
@@ -285,6 +347,10 @@ function eventStyleLabel(value: string) {
   if (value === "cookie_cart") return "Cookie cart";
   if (value === "not_sure") return "Not sure yet";
   return "Cookies only";
+}
+
+function firstName(name: string) {
+  return name.trim().split(/\s+/)[0] || "there";
 }
 
 function getErrorMessage(error: unknown) {

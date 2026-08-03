@@ -24,11 +24,11 @@ const structuredData = {
       "@id": "https://jacks-cookies.com/#bakery",
       name: "Jack's Cookies",
       url: "https://jacks-cookies.com",
-      image: "https://jacks-cookies.com/og.jpg",
-      logo: "https://jacks-cookies.com/brand/jacks-cookies-logo.png",
+      image: "https://jacks-cookies.com/brand/rebrand/full-lockup.webp",
+      logo: "https://jacks-cookies.com/brand/rebrand/full-lockup.webp",
       description:
         "Home-based cottage bakery in Red Bank, NJ baking The Everyday — an organic small-batch chocolate chip cookie with a hemp seed twist. Baked fresh to order, with pickup, local delivery, and wholesale.",
-      slogan: "Bringing back the timeless, quintessential chocolate chip cookie.",
+      slogan: "The Everyday Chocolate Chip Cookie.",
       servesCuisine: "Bakery",
       priceRange: "$",
       email: "JacksCookiesNJ@gmail.com",
@@ -71,7 +71,7 @@ const structuredData = {
       "@type": "Product",
       "@id": "https://jacks-cookies.com/#everyday",
       name: "The Everyday — Organic Chocolate Chip Cookie",
-      image: "https://jacks-cookies.com/og.jpg",
+      image: "https://jacks-cookies.com/brand/rebrand/full-lockup.webp",
       description:
         "Organic small-batch chocolate chip cookie with a hemp seed twist, baked fresh to order in Red Bank, NJ. Order from 3 cookies up to 1,000 for events and wholesale.",
       brand: { "@type": "Brand", name: "Jack's Cookies" },
@@ -101,10 +101,10 @@ export default function Home() {
           </div>
           <a className="nav-wordmark" href="#top" aria-label="Jack's Cookies home">
             <Image
-              src="/brand/jacks-nav-wordmark.png"
-              alt="Jack's Cookies"
-              width={1097}
-              height={722}
+              src="/brand/rebrand/jc-mark.webp"
+              alt="Jack's Cookies home"
+              width={1683}
+              height={1766}
               priority
             />
           </a>
@@ -129,12 +129,14 @@ export default function Home() {
 
         <div className="public-hero-grid" id="top">
           <div className="public-hero-copy">
-            <div className="star-cluster hero-copy-cluster left" aria-hidden="true">
-              <i />
-              <i />
-              <i />
-            </div>
-            <h1>One Cookie. Done Right.</h1>
+            <Image
+              className="hero-logo"
+              src="/brand/rebrand/full-lockup.webp"
+              alt="Jack's Cookies"
+              width={3057}
+              height={3194}
+              priority
+            />
             <p>The Everyday Chocolate Chip Cookie.</p>
             <div className="public-actions">
               <a className="public-button primary" href="#order">
@@ -145,69 +147,39 @@ export default function Home() {
               </a>
             </div>
           </div>
-          <div className="mascot-pop hero-mascot-pop" aria-hidden="true">
-            <Image
-              src="/brand/cookie-mascot.png"
-              alt=""
-              width={1024}
-              height={1024}
-            />
-            <div className="star-cluster mascot-star-cluster">
-              <i />
-              <i />
-              <i />
-            </div>
-          </div>
         </div>
-      </section>
-
-      <section className="order-strip" aria-label="Quick ordering details">
-        <article>
-          <span>01</span>
-          <strong>Tuesday or Friday</strong>
-          <p>Choose your pickup or delivery day.</p>
-        </article>
-        <article>
-          <span>02</span>
-          <strong>$3 each</strong>
-          <p>Choose your cookie count.</p>
-        </article>
-        <article>
-          <span>03</span>
-          <strong>Pickup or delivery</strong>
-          <p>Pickup in Red Bank or local delivery in Monmouth County (for now!).</p>
-        </article>
       </section>
 
       <section className="public-section order-section" id="order">
         <div className="section-heading">
-          <p className="public-kicker">Order The Everyday</p>
-          <h2>Your cookie jar looks empty.</h2>
+          <h2 className="art-heading order-art-heading">
+            <span>Your cookie jar looks empty.</span>
+            <Image src="/brand/headlines/cookie-jar-solid-teal.png" alt="" width={1941} height={339} />
+          </h2>
           <p>
-            Baked fresh Tuesday and Friday for pickup or local delivery.
+            Pickup in Red Bank or local delivery in Monmouth County (for now!).
           </p>
         </div>
         <PublicOrderForm />
       </section>
 
+      <div className="checker-divider" aria-hidden="true" />
+
       <section className="public-feature" id="story">
         <div className="story-feature-inner">
-          <div className="star-cluster story-photo-cluster" aria-hidden="true">
-            <i />
-            <i />
-            <i />
-          </div>
           <div className="story-photo">
             <Image
-              src="/brand/jack-story.jpg.webp"
-              alt="Jack holding a Jack's Cookies cookie menu sign"
-              width={1320}
-              height={880}
+              src="/brand/jack-story-rebrand-v3.png"
+              alt="Jack wearing the new Jack's Cookies branding"
+              width={1086}
+              height={1448}
             />
           </div>
           <div className="feature-copy">
-            <p className="public-kicker">Our Story</p>
-            <h2>It Started With Jack</h2>
+            <h2 className="art-heading story-art-heading">
+              <span>It Started With Jack</span>
+              <Image src="/brand/headlines/story-peach.png" alt="" width={1960} height={333} />
+            </h2>
             <p>
               Jack&apos;s Cookies started with one goal: make one really great
               chocolate chip cookie. It all came together almost by accident.
@@ -235,11 +207,15 @@ export default function Home() {
         </div>
       </section>
 
+      <div className="checker-divider reverse" aria-hidden="true" />
+
       <section className="public-section instagram-section" aria-label="Instagram">
         <div className="section-heading instagram-heading">
           <div>
-            <p className="public-kicker">Follow Along</p>
-            <h2>@jackscookies</h2>
+            <h2 className="art-heading instagram-art-heading">
+              <span>@jackscookies</span>
+              <Image src="/brand/headlines/instagram-solid-teal.png" alt="" width={1852} height={457} />
+            </h2>
           </div>
           <a
             className="public-button primary"
@@ -257,19 +233,24 @@ export default function Home() {
         />
       </section>
 
+      <div className="checker-divider" aria-hidden="true" />
+
       <section className="public-feature wholesale-feature" id="wholesale">
-        <div className="star-cluster wholesale-cluster" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-        </div>
         <div className="feature-copy wholesale-copy">
           <div>
-            <p className="public-kicker">Wholesale</p>
-            <h2>Carry Jack&apos;s Cookies</h2>
+            <h2 className="art-heading wholesale-art-heading">
+              <span>Carry Jack&apos;s Cookies</span>
+              <Image src="/brand/headlines/wholesale-peach.png" alt="" width={1940} height={374} />
+            </h2>
             <p>
               One dependable chocolate chip cookie your customers will come back
               for.
+            </p>
+            <p>
+              Baked in small batches in Red Bank with organic ingredients and
+              hemp seeds that add a subtle nuttiness and signature texture. A
+              delicious fit for cafés, markets, offices, hospitality partners,
+              corporate gifts, and special events.
             </p>
           </div>
           <div className="wholesale-actions">
@@ -277,7 +258,7 @@ export default function Home() {
               className="public-button primary"
               href="mailto:JacksCookiesNJ@gmail.com?subject=Wholesale%20inquiry%20for%20Jack's%20Cookies"
             >
-              Email About Wholesale
+              Wholesale Inquiries
             </a>
             <em>JacksCookiesNJ@gmail.com</em>
           </div>
@@ -300,47 +281,28 @@ export default function Home() {
             <Link href="/cookie-delivery-red-bank-nj">
               Cookie delivery in Red Bank, NJ &amp; Monmouth County
             </Link>
-            <span>
-              How pickup in Red Bank and local delivery across Monmouth County
-              work, our bake days, and ordering for events.
-            </span>
+            <span>How pickup, local delivery, bake days, and event ordering work.</span>
           </li>
           <li>
-            <Link href="/faq">
-              Frequently asked questions about ordering
-            </Link>
-            <span>
-              Where we are, what a cookie costs, how many you can order,
-              delivery, wholesale, hemp seeds, and how to tell us apart from
-              similarly named bakeries in other states.
-            </span>
+            <Link href="/faq">Frequently asked questions about ordering</Link>
+            <span>Answers about pricing, delivery, wholesale, and hemp seeds.</span>
           </li>
           <li>
-            <Link href="/blog/the-everyday-story">
-              How hemp seeds created The Everyday
-            </Link>
-            <span>
-              The origin story of our one cookie, written by founder Julianna
-              Levine.
-            </span>
+            <Link href="/blog">Read the Jack&apos;s Cookies journal</Link>
+            <span>The story behind The Everyday, our ingredients, and hemp seeds.</span>
+          </li>
+          <li>
+            <Link href="/blog/the-everyday-story">How hemp seeds created The Everyday</Link>
           </li>
           <li>
             <Link href="/blog/do-hemp-seed-cookies-get-you-high">
               Do hemp seed cookies get you high? (No)
             </Link>
-            <span>
-              Why the culinary hemp seeds in our chocolate chip cookies are a
-              food, not a drug.
-            </span>
           </li>
           <li>
             <Link href="/blog/what-makes-a-chocolate-chip-cookie-organic">
               What makes a chocolate chip cookie organic?
             </Link>
-            <span>
-              What the word actually means on an ingredient list, and what we
-              look for when we buy.
-            </span>
           </li>
         </ul>
       </section>
@@ -353,10 +315,10 @@ export default function Home() {
         <div className="footer-brand">
           <Image
             className="footer-logo"
-            src="/brand/jacks-nav-wordmark.png"
+            src="/brand/rebrand/full-lockup.webp"
             alt="Jack's Cookies"
-            width={1077}
-            height={706}
+            width={3057}
+            height={3194}
           />
           <p>One cookie. Done right.</p>
           <span>Made fresh in Red Bank, New Jersey.</span>

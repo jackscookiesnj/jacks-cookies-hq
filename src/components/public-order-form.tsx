@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 
 const cookieName = "The Everyday";
 const regularPrice = 3;
@@ -136,7 +137,10 @@ export function PublicOrderForm() {
         <form className="order-form" onSubmit={handleStandardSubmit}>
           <div className="order-summary-card">
             <div>
-              <h3>{cookieName}</h3>
+              <h3 className="art-heading everyday-art-heading">
+                <span>{cookieName}</span>
+                <Image src="/brand/headlines/the-everyday-solid-teal.png" alt="" width={1751} height={422} />
+              </h3>
               <p>Fresh Tuesday and Friday.</p>
             </div>
             <div className="price-total" aria-live="polite">
@@ -184,33 +188,28 @@ export function PublicOrderForm() {
             )}
           </fieldset>
 
-          <fieldset className="fulfillment-field">
-            <legend>Pickup or delivery</legend>
-            <div className="choice-row">
-              <label className={fulfillment === "pickup" ? "choice active" : "choice"}>
-                <input
-                  type="radio"
-                  name="fulfillment"
-                  value="pickup"
-                  checked={fulfillment === "pickup"}
-                  onChange={() => setFulfillment("pickup")}
-                />
-                Pickup
-                <span>Free</span>
-              </label>
-              <label className={fulfillment === "delivery" ? "choice active" : "choice"}>
-                <input
-                  type="radio"
-                  name="fulfillment"
-                  value="delivery"
-                  checked={fulfillment === "delivery"}
-                  onChange={() => setFulfillment("delivery")}
-                />
-                Local Delivery
-                <span>Fee confirmed after request</span>
-              </label>
-            </div>
-          </fieldset>
+          <div className="form-options-grid">
+            <label>
+              Pickup or delivery
+              <select
+                name="fulfillment"
+                value={fulfillment}
+                onChange={(event) => setFulfillment(event.target.value as Fulfillment)}
+              >
+                <option value="pickup">Pickup — free</option>
+                <option value="delivery">Local delivery — fee confirmed later</option>
+              </select>
+            </label>
+
+            <label>
+              Payment
+              <select name="payment" defaultValue="card">
+                <option value="card">Credit card</option>
+                <option value="venmo">Venmo @jacks-cookies</option>
+                <option value="cash">Cash</option>
+              </select>
+            </label>
+          </div>
 
           {fulfillment === "delivery" ? (
             <label>
@@ -223,25 +222,6 @@ export function PublicOrderForm() {
               />
             </label>
           ) : null}
-
-          <fieldset className="payment-field">
-            <legend>Payment</legend>
-            <div className="payment-grid">
-              <label className="payment-choice">
-                <input type="radio" name="payment" value="card" defaultChecked />
-                Credit card
-              </label>
-              <label className="payment-choice">
-                <input type="radio" name="payment" value="venmo" />
-                Venmo
-                <span>@jacks-cookies</span>
-              </label>
-              <label className="payment-choice">
-                <input type="radio" name="payment" value="cash" />
-                Cash
-              </label>
-            </div>
-          </fieldset>
 
           <div className="public-form-grid">
             <label>
@@ -258,14 +238,17 @@ export function PublicOrderForm() {
             </label>
           </div>
 
-          <label className="notes-field">
-            Notes
-            <textarea
-              name="notes"
-              rows={3}
-              placeholder="Gift message, delivery timing, or anything Jack should know."
-            />
-          </label>
+          <details className="optional-notes">
+            <summary>Add a note <span>(optional)</span></summary>
+            <label className="notes-field">
+              Notes
+              <textarea
+                name="notes"
+                rows={3}
+                placeholder="Gift message, delivery timing, or anything Jack should know."
+              />
+            </label>
+          </details>
 
           <button className="public-button primary submit-button" disabled={submitting} type="submit">
             {submitting ? "Sending..." : "Send order request"}
@@ -287,13 +270,21 @@ export function PublicOrderForm() {
         <form className="order-form event-form" onSubmit={handleEventSubmit}>
           <div className="order-summary-card">
             <div>
-              <h3>Planning an Event?</h3>
+              <h3 className="art-heading event-art-heading">
+                <span>Planning an Event?</span>
+                <Image
+                  src="/brand/headlines/planning-an-event-solid-teal.png"
+                  alt=""
+                  width={2150}
+                  height={393}
+                />
+              </h3>
               <p>Cookies, cookie cart, or both.</p>
             </div>
           </div>
 
           <label className="quantity-field">
-            Cookies needed
+            Quantity
             <input
               name="event_quantity"
               type="number"
@@ -320,24 +311,14 @@ export function PublicOrderForm() {
             </label>
           </div>
 
-          <fieldset className="event-style-field">
-            <legend>Event style</legend>
-            <div className="choice-row">
-              <label className="choice">
-                <input type="radio" name="event_style" value="cookies_only" defaultChecked />
-                Cookies only
-              </label>
-              <label className="choice">
-                <input type="radio" name="event_style" value="cookie_cart" />
-                Cookie cart
-                <span>Subject to availability</span>
-              </label>
-              <label className="choice">
-                <input type="radio" name="event_style" value="not_sure" />
-                Not sure yet
-              </label>
-            </div>
-          </fieldset>
+          <label className="event-style-field">
+            Event style
+            <select name="event_style" defaultValue="cookies_only">
+              <option value="cookies_only">Cookies only</option>
+              <option value="cookie_cart">Cookie cart — subject to availability</option>
+              <option value="not_sure">Not sure yet</option>
+            </select>
+          </label>
 
           <div className="public-form-grid">
             <label>
@@ -354,33 +335,19 @@ export function PublicOrderForm() {
             </label>
           </div>
 
-          <fieldset className="payment-field">
-            <legend>Payment</legend>
-            <div className="payment-grid">
-              <label className="payment-choice">
-                <input type="radio" name="event_payment" value="card" defaultChecked />
-                Credit card
-              </label>
-              <label className="payment-choice">
-                <input type="radio" name="event_payment" value="venmo" />
-                Venmo
-                <span>@jacks-cookies</span>
-              </label>
-              <label className="payment-choice">
-                <input type="radio" name="event_payment" value="cash" />
-                Cash
-              </label>
-            </div>
-          </fieldset>
+          <input name="event_payment" type="hidden" value="confirmed_later" />
 
-          <label className="notes-field">
-            Notes
-            <textarea
-              name="event_notes"
-              rows={4}
-              placeholder="Timing, delivery details, packaging needs, or anything helpful."
-            />
-          </label>
+          <details className="optional-notes">
+            <summary>Add a note <span>(optional)</span></summary>
+            <label className="notes-field">
+              Notes
+              <textarea
+                name="event_notes"
+                rows={4}
+                placeholder="Timing, delivery details, packaging needs, or anything helpful."
+              />
+            </label>
+          </details>
 
           <button className="public-button primary submit-button" disabled={submitting} type="submit">
             {submitting ? "Sending..." : "Send event request"}
