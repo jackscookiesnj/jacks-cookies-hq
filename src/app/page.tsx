@@ -153,7 +153,7 @@ export default function Home() {
         <div className="section-heading">
           <h2 className="art-heading order-art-heading">
             <span>Your cookie jar looks empty.</span>
-            <Image src="/brand/headlines/cookie-jar-solid-teal.png" alt="" width={1941} height={339} />
+            <Image src="/brand/headlines/cookie-jar-clean-teal.png" alt="" width={1941} height={339} />
           </h2>
           <p>
             Pickup in Red Bank or local delivery in Monmouth County (for now!).
@@ -177,7 +177,7 @@ export default function Home() {
           <div className="feature-copy">
             <h2 className="art-heading story-art-heading">
               <span>It Started With Jack</span>
-              <Image src="/brand/headlines/story-peach.png" alt="" width={1960} height={333} />
+              <Image src="/brand/headlines/story-clean-peach.png" alt="" width={1960} height={333} />
             </h2>
             <p>
               Jack&apos;s Cookies started with one goal: make one really great
@@ -239,7 +239,7 @@ export default function Home() {
           <div>
             <h2 className="art-heading wholesale-art-heading">
               <span>Carry Jack&apos;s Cookies</span>
-              <Image src="/brand/headlines/wholesale-peach.png" alt="" width={1940} height={374} />
+              <Image src="/brand/headlines/wholesale-clean-peach.png" alt="" width={1940} height={374} />
             </h2>
             <p>
               One dependable chocolate chip cookie your customers will come back
