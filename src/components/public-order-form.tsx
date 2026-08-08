@@ -5,6 +5,7 @@ import Image from "next/image";
 
 const cookieName = "The Everyday";
 const regularPrice = 3;
+const deliveryFee = 6;
 const standardMinimum = 3;
 const eventMinimum = 24;
 const maximumQuantity = 1000;
@@ -31,6 +32,7 @@ export function PublicOrderForm() {
   const unitPrice = regularPrice;
   const quantity = normalizeQuantity(quantityInput, standardMinimum);
   const subtotal = quantity * unitPrice;
+  const total = subtotal + (fulfillment === "delivery" ? deliveryFee : 0);
 
   useEffect(() => {
     function syncModeFromHash() {
@@ -144,8 +146,11 @@ export function PublicOrderForm() {
               <p>Fresh Tuesday and Friday.</p>
             </div>
             <div className="price-total" aria-live="polite">
-              <span>{formatMoney(unitPrice)} each</span>
-              <strong>{formatMoney(subtotal)}</strong>
+              <span>
+                {formatMoney(unitPrice)} each
+                {fulfillment === "delivery" ? ` + ${formatMoney(deliveryFee)} delivery` : ""}
+              </span>
+              <strong>{formatMoney(total)}</strong>
             </div>
           </div>
 
@@ -197,7 +202,7 @@ export function PublicOrderForm() {
                 onChange={(event) => setFulfillment(event.target.value as Fulfillment)}
               >
                 <option value="pickup">Pickup — free</option>
-                <option value="delivery">Local delivery — fee confirmed later</option>
+                <option value="delivery">Local delivery — $6</option>
               </select>
             </label>
 

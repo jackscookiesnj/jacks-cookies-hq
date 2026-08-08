@@ -181,9 +181,9 @@ export default function CookieDeliveryRedBankNJ() {
 
         <h2>Delivery across Monmouth County, NJ</h2>
         <p>
-          We deliver locally throughout Monmouth County, NJ. Choose delivery at
-          checkout and we&apos;ll confirm your delivery window and any fee after
-          you place the order.
+          We deliver locally throughout Monmouth County, NJ for a flat $6 fee.
+          Choose delivery at checkout and we&apos;ll confirm your delivery window
+          after you place the order.
           {/* [OWNER: replace the sentence above once confirmed — "We deliver to
               [DELIVERY-TOWNS] on [DELIVERY-DAYS]. Delivery is [DELIVERY-FEE]."
               Do NOT publish a town list, a delivery day, or a fee until Julianna

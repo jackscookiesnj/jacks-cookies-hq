@@ -8,6 +8,7 @@ const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const standardMinimum = 3;
 const eventMinimum = 24;
 const maximumQuantity = 1000;
+const deliveryFee = 6;
 
 type PublicOrderPayload = {
   mode: "standard" | "event";
@@ -39,7 +40,10 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
     const customer = await findOrCreateCustomer(supabase, payload, now);
     const invoiceReference = `${payload.name} - ${formatDate(payload.requestedDate)}`;
-    const revenue = roundMoney(payload.quantity * 3);
+    const revenue = roundMoney(
+      payload.quantity * 3 +
+        (payload.mode === "standard" && payload.fulfillment === "delivery" ? deliveryFee : 0),
+    );
     const orderPayload = {
       customer_id: customer.id,
       customer_name: customer.name,
@@ -200,6 +204,7 @@ function buildOrderNotes(payload: PublicOrderPayload) {
 
   if (payload.mode === "standard") {
     lines.push(`Fulfillment: ${payload.fulfillment === "delivery" ? "Local delivery" : "Pickup"}.`);
+    if (payload.fulfillment === "delivery") lines.push(`Delivery fee: $${deliveryFee.toFixed(2)}.`);
     if (payload.deliveryAddress) lines.push(`Delivery address: ${payload.deliveryAddress}.`);
   }
 
