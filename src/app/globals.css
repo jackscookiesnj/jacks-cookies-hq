@@ -2980,12 +2980,20 @@ button {
 }
 
 .checkout-confirmation h1 {
-  max-width: 10ch;
+  max-width: none;
   margin: 0.45rem 0 1.35rem;
   color: var(--confirmation-teal);
   font-family: "Cooper Black", "Bookman Old Style", Georgia, serif;
-  font-size: clamp(2.7rem, 8vw, 5.25rem);
+  font-size: clamp(2.35rem, 5vw, 3.45rem);
   line-height: 0.9;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .checkout-confirmation h1 {
+    max-width: 10ch;
+    white-space: normal;
+  }
 }
 
 .confirmation-details {
