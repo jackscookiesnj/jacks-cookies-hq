@@ -444,7 +444,7 @@ function DeliveryAddressAutocomplete({
     address: string;
     county: string;
     state: string;
-    eligible: boolean;
+    eligible: boolean | null;
   }) => void;
 }) {
   const onAddressSelectedRef = useRef(onAddressSelected);
@@ -561,7 +561,7 @@ function DeliveryAddressAutocomplete({
           onChange={(event) => {
             setInputValue(event.target.value);
             setLoadError("");
-            onAddressSelectedRef.current({ address: "", county: "", state: "", eligible: false });
+            onAddressSelectedRef.current({ address: "", county: "", state: "", eligible: null });
           }}
         />
         {suggestions.length > 0 ? (
