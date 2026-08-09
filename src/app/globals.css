@@ -2195,6 +2195,10 @@ button {
   align-content: start;
 }
 
+.event-style-field {
+  align-content: start;
+}
+
 .order-form legend {
   margin-bottom: 0.65rem;
   color: var(--jc-teal);
