@@ -527,7 +527,7 @@ function loadGoogleMaps(apiKey: string) {
     };
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&callback=${callbackName}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&libraries=places&v=weekly&callback=${callbackName}`;
     script.async = true;
     script.onerror = () => {
       delete callbackWindow[callbackName];
