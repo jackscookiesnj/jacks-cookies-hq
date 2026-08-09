@@ -363,6 +363,14 @@ export function PublicOrderForm() {
             <span>Event orders start at 24 cookies.</span>
           </label>
 
+          <label className="event-style-field">
+            Event style
+            <select name="event_style" defaultValue="cookies_only">
+              <option value="cookies_only">Cookies only</option>
+              <option value="cookie_cart">Cart and cookies — subject to availability</option>
+            </select>
+          </label>
+
           <div className="public-form-grid">
             <label>
               Requested date
@@ -377,15 +385,6 @@ export function PublicOrderForm() {
               <input name="occasion" placeholder="Birthday, office, client gift..." required />
             </label>
           </div>
-
-          <label className="event-style-field">
-            Event style
-            <select name="event_style" defaultValue="cookies_only">
-              <option value="cookies_only">Cookies only</option>
-              <option value="cookie_cart">Cookie cart — subject to availability</option>
-              <option value="not_sure">Not sure yet</option>
-            </select>
-          </label>
 
           <div className="public-form-grid">
             <label>

@@ -2203,13 +2203,22 @@ button {
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
+.order-form select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10'%3E%3Cpath d='m2 2 6 6 6-6' fill='none' stroke='%23643b1c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-position: right 1.2rem center;
+  background-repeat: no-repeat;
+  background-size: 1rem auto;
+  padding-right: 3.25rem;
+}
+
 .quantity-field input,
 .date-select-field select,
 .fulfillment-select-field select,
 .event-style-field select {
   height: 3.85rem;
   min-height: 3.85rem;
-  padding: 0 1rem;
+  padding-left: 1rem;
 }
 
 .date-select-field select,
@@ -2518,7 +2527,6 @@ button {
 
 .order-summary-card,
 .fulfillment-field,
-.event-style-field,
 .payment-field,
   .public-form-grid,
 .notes-field,
