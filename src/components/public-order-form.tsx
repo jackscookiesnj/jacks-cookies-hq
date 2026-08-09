@@ -246,7 +246,7 @@ export function PublicOrderForm() {
               }}
             >
               <option value="pickup">Pickup — free</option>
-              <option value="delivery">Local delivery — $6</option>
+              <option value="delivery">Monmouth County delivery — $6</option>
             </select>
           </label>
 

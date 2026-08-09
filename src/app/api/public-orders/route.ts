@@ -140,7 +140,7 @@ async function createSquareCheckout(
 
   if (payload.fulfillment === "delivery") {
     lineItems.push({
-      name: "Local delivery",
+      name: "Monmouth County delivery",
       quantity: "1",
       base_price_money: { amount: deliveryFee * 100, currency: "USD" },
     });
@@ -309,7 +309,7 @@ function buildOrderNotes(payload: PublicOrderPayload) {
   ];
 
   if (payload.mode === "standard") {
-    lines.push(`Fulfillment: ${payload.fulfillment === "delivery" ? "Local delivery" : "Pickup"}.`);
+    lines.push(`Fulfillment: ${payload.fulfillment === "delivery" ? "Monmouth County delivery" : "Pickup"}.`);
     if (payload.fulfillment === "delivery") lines.push(`Delivery fee: $${deliveryFee.toFixed(2)}.`);
     if (payload.deliveryAddress) lines.push(`Delivery address: ${payload.deliveryAddress}.`);
   }
@@ -418,7 +418,7 @@ async function sendCustomerConfirmation(
               payload.eventStyle ? `Event style: ${eventStyleLabel(payload.eventStyle)}` : "",
             ].filter(Boolean)
           : [
-              `Pickup or delivery: ${payload.fulfillment === "delivery" ? "Local delivery" : "Pickup"}`,
+              `Pickup or delivery: ${payload.fulfillment === "delivery" ? "Monmouth County delivery" : "Pickup"}`,
               payload.deliveryAddress ? `Delivery address: ${payload.deliveryAddress}` : "",
             ].filter(Boolean)),
         `Payment: ${paymentLabel(payload.payment)}`,
