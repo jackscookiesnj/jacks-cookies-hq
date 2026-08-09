@@ -2915,3 +2915,43 @@ button {
   margin: 0 auto 2rem;
   font-size: 1.15rem;
 }
+
+.delivery-address-block {
+  display: grid;
+  gap: 0.55rem;
+}
+
+.field-label {
+  color: var(--brown);
+  font-weight: 800;
+}
+
+.google-address-field,
+.google-address-field gmp-place-autocomplete {
+  display: block;
+  width: 100%;
+}
+
+.google-address-field gmp-place-autocomplete {
+  color-scheme: light;
+  --gmpx-color-surface: #fffaf6;
+  --gmpx-color-on-surface: #643b1c;
+  --gmpx-color-outline: #643b1c;
+  --gmpx-font-family-base: inherit;
+  --gmpx-font-size-base: 1rem;
+  --gmpx-border-radius: 999px;
+}
+
+.address-status {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.address-status.valid {
+  color: #00624b;
+}
+
+.address-status.invalid {
+  color: #a83b19;
+}

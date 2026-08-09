@@ -19,6 +19,8 @@ type PublicOrderPayload = {
   requestedDate: string;
   fulfillment?: "pickup" | "delivery";
   deliveryAddress?: string;
+  deliveryCounty?: string;
+  deliveryState?: string;
   payment: string;
   notes?: string;
   eventLocation?: string;
@@ -216,6 +218,18 @@ function normalizePayload(input: unknown): PublicOrderPayload {
     throw new Error("Please enter 1000 cookies or fewer.");
   }
 
+  const fulfillment = data.fulfillment === "delivery" ? "delivery" : "pickup";
+  const deliveryAddress = stringValue(data.deliveryAddress);
+  const deliveryCounty = stringValue(data.deliveryCounty);
+  const deliveryState = stringValue(data.deliveryState);
+
+  if (mode === "standard" && fulfillment === "delivery") {
+    if (!deliveryAddress) throw new Error("Please select a verified delivery address.");
+    if (deliveryCounty.toLowerCase() !== "monmouth county" || deliveryState !== "NJ") {
+      throw new Error("Delivery is only available within Monmouth County, New Jersey.");
+    }
+  }
+
   return {
     mode,
     name: stringValue(data.name),
@@ -223,8 +237,10 @@ function normalizePayload(input: unknown): PublicOrderPayload {
     phone: stringValue(data.phone),
     quantity,
     requestedDate,
-    fulfillment: data.fulfillment === "delivery" ? "delivery" : "pickup",
-    deliveryAddress: stringValue(data.deliveryAddress),
+    fulfillment,
+    deliveryAddress,
+    deliveryCounty,
+    deliveryState,
     payment: stringValue(data.payment) || "card",
     notes: stringValue(data.notes),
     eventLocation: stringValue(data.eventLocation),

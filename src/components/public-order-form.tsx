@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
 const cookieName = "The Everyday";
@@ -18,6 +18,37 @@ type PickupDay = {
   cutoffLabel: string;
 };
 
+type GoogleAddressComponent = {
+  longText?: string;
+  shortText?: string;
+  types?: string[];
+};
+
+type GooglePlace = {
+  formattedAddress?: string;
+  addressComponents?: GoogleAddressComponent[];
+  fetchFields(options: { fields: string[] }): Promise<void>;
+};
+
+type GooglePlaceSelectEvent = Event & {
+  placePrediction: { toPlace(): GooglePlace };
+};
+
+type GooglePlaceAutocompleteElement = HTMLElement & {
+  includedRegionCodes: string[];
+  placeholder: string;
+};
+
+type GoogleMapsWindow = Window & {
+  google?: {
+    maps: {
+      importLibrary(name: "places"): Promise<{
+        PlaceAutocompleteElement: new () => GooglePlaceAutocompleteElement;
+      }>;
+    };
+  };
+};
+
 const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
 export function PublicOrderForm() {
@@ -27,6 +58,10 @@ export function PublicOrderForm() {
   const [submitted, setSubmitted] = useState<OrderMode | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [deliveryAddress, setDeliveryAddress] = useState("");
+  const [deliveryCounty, setDeliveryCounty] = useState("");
+  const [deliveryState, setDeliveryState] = useState("");
+  const [deliveryEligible, setDeliveryEligible] = useState<boolean | null>(null);
 
   const pickupDays = useMemo(() => getAvailablePickupDays(new Date()), []);
   const unitPrice = regularPrice;
@@ -61,6 +96,8 @@ export function PublicOrderForm() {
       requestedDate: formValue(data, "pickup_day"),
       fulfillment,
       deliveryAddress: formValue(data, "delivery_address"),
+      deliveryCounty: formValue(data, "delivery_county"),
+      deliveryState: formValue(data, "delivery_state"),
       payment: formValue(data, "payment"),
       notes: formValue(data, "notes"),
     });
@@ -203,7 +240,10 @@ export function PublicOrderForm() {
             <select
               name="fulfillment"
               value={fulfillment}
-              onChange={(event) => setFulfillment(event.target.value as Fulfillment)}
+              onChange={(event) => {
+                setFulfillment(event.target.value as Fulfillment);
+                setSubmitError("");
+              }}
             >
               <option value="pickup">Pickup — free</option>
               <option value="delivery">Local delivery — $6</option>
@@ -213,15 +253,28 @@ export function PublicOrderForm() {
           <input name="payment" type="hidden" value="square" />
 
           {fulfillment === "delivery" ? (
-            <label>
-              Delivery address
-              <input
-                name="delivery_address"
-                autoComplete="street-address"
-                placeholder="Street address, town, ZIP"
-                required
+            <div className="delivery-address-block">
+              <span className="field-label">Delivery address</span>
+              <DeliveryAddressAutocomplete
+                onAddressSelected={({ address, county, state, eligible }) => {
+                  setDeliveryAddress(address);
+                  setDeliveryCounty(county);
+                  setDeliveryState(state);
+                  setDeliveryEligible(eligible);
+                }}
               />
-            </label>
+              <input name="delivery_address" type="hidden" value={deliveryAddress} />
+              <input name="delivery_county" type="hidden" value={deliveryCounty} />
+              <input name="delivery_state" type="hidden" value={deliveryState} />
+              {deliveryEligible === true ? (
+                <span className="address-status valid">✓ Monmouth County delivery available</span>
+              ) : null}
+              {deliveryEligible === false ? (
+                <span className="address-status invalid">
+                  Sorry, delivery is only available within Monmouth County. Please choose pickup instead.
+                </span>
+              ) : null}
+            </div>
           ) : null}
 
           <div className="public-form-grid">
@@ -251,7 +304,11 @@ export function PublicOrderForm() {
             </label>
           </details>
 
-          <button className="public-button primary submit-button" disabled={submitting} type="submit">
+          <button
+            className="public-button primary submit-button"
+            disabled={submitting || (fulfillment === "delivery" && deliveryEligible !== true)}
+            type="submit"
+          >
             {submitting ? "Opening secure checkout..." : `Continue to checkout — ${formatMoney(total)}`}
           </button>
 
@@ -371,6 +428,115 @@ export function PublicOrderForm() {
       )}
     </div>
   );
+}
+
+function DeliveryAddressAutocomplete({
+  onAddressSelected,
+}: {
+  onAddressSelected: (address: {
+    address: string;
+    county: string;
+    state: string;
+    eligible: boolean;
+  }) => void;
+}) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const onAddressSelectedRef = useRef(onAddressSelected);
+  const [loadError, setLoadError] = useState("");
+
+  useEffect(() => {
+    onAddressSelectedRef.current = onAddressSelected;
+  }, [onAddressSelected]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const container = containerRef.current;
+
+    async function initialize() {
+      const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+      if (!apiKey || !container) {
+        setLoadError("Address lookup is unavailable. Please choose pickup or try again shortly.");
+        return;
+      }
+
+      try {
+        await loadGoogleMaps(apiKey);
+        if (cancelled) return;
+
+        const mapsWindow = window as GoogleMapsWindow;
+        const library = await mapsWindow.google?.maps.importLibrary("places");
+        if (!library || cancelled) return;
+
+        const autocomplete = new library.PlaceAutocompleteElement();
+        autocomplete.includedRegionCodes = ["us"];
+        autocomplete.placeholder = "Start typing your street address";
+        autocomplete.addEventListener("gmp-select", async (event) => {
+          const place = (event as GooglePlaceSelectEvent).placePrediction.toPlace();
+          await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
+
+          const county = addressPart(place.addressComponents, "administrative_area_level_2");
+          const state = addressPart(place.addressComponents, "administrative_area_level_1", true);
+          const address = place.formattedAddress ?? "";
+          const eligible = county.toLowerCase() === "monmouth county" && state === "NJ";
+          onAddressSelectedRef.current({ address, county, state, eligible });
+        });
+        container.replaceChildren(autocomplete);
+      } catch (error) {
+        console.error("Google address lookup failed", error);
+        setLoadError("Address lookup could not load. Please refresh the page or choose pickup.");
+      }
+    }
+
+    void initialize();
+    return () => {
+      cancelled = true;
+      container?.replaceChildren();
+    };
+  }, []);
+
+  return (
+    <>
+      <div className="google-address-field" ref={containerRef} />
+      {loadError ? <span className="address-status invalid">{loadError}</span> : null}
+    </>
+  );
+}
+
+function addressPart(
+  components: GoogleAddressComponent[] | undefined,
+  type: string,
+  useShortText = false,
+) {
+  const component = components?.find((item) => item.types?.includes(type));
+  return (useShortText ? component?.shortText : component?.longText) ?? "";
+}
+
+let googleMapsPromise: Promise<void> | null = null;
+
+function loadGoogleMaps(apiKey: string) {
+  const mapsWindow = window as GoogleMapsWindow;
+  if (mapsWindow.google?.maps.importLibrary) return Promise.resolve();
+  if (googleMapsPromise) return googleMapsPromise;
+
+  googleMapsPromise = new Promise((resolve, reject) => {
+    const callbackName = `initJacksCookiesMaps${Date.now()}`;
+    const callbackWindow = window as unknown as Record<string, unknown>;
+    callbackWindow[callbackName] = () => {
+      delete callbackWindow[callbackName];
+      resolve();
+    };
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(apiKey)}&loading=async&callback=${callbackName}`;
+    script.async = true;
+    script.onerror = () => {
+      delete callbackWindow[callbackName];
+      reject(new Error("Google Maps failed to load."));
+    };
+    document.head.appendChild(script);
+  });
+
+  return googleMapsPromise;
 }
 
 function formValue(data: FormData, key: string) {
