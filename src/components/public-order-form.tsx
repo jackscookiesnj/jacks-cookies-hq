@@ -30,21 +30,28 @@ type GooglePlace = {
   fetchFields(options: { fields: string[] }): Promise<void>;
 };
 
-type GooglePlaceSelectEvent = Event & {
-  placePrediction: { toPlace(): GooglePlace };
+type GooglePlacePrediction = {
+  text: { toString(): string };
+  toPlace(): GooglePlace;
 };
 
-type GooglePlaceAutocompleteElement = HTMLElement & {
-  includedRegionCodes: string[];
-  placeholder: string;
+type GoogleAutocompleteSuggestion = {
+  placePrediction?: GooglePlacePrediction;
+};
+
+type GooglePlacesLibrary = {
+  AutocompleteSessionToken: new () => object;
+  AutocompleteSuggestion: {
+    fetchAutocompleteSuggestions(request: Record<string, unknown>): Promise<{
+      suggestions: GoogleAutocompleteSuggestion[];
+    }>;
+  };
 };
 
 type GoogleMapsWindow = Window & {
   google?: {
     maps: {
-      importLibrary(name: "places"): Promise<{
-        PlaceAutocompleteElement: new () => GooglePlaceAutocompleteElement;
-      }>;
+      importLibrary(name: "places"): Promise<GooglePlacesLibrary>;
     };
   };
 };
@@ -440,8 +447,14 @@ function DeliveryAddressAutocomplete({
     eligible: boolean;
   }) => void;
 }) {
-  const containerRef = useRef<HTMLDivElement>(null);
   const onAddressSelectedRef = useRef(onAddressSelected);
+  const placesLibraryRef = useRef<GooglePlacesLibrary | null>(null);
+  const sessionTokenRef = useRef<object | null>(null);
+  const newestRequestRef = useRef(0);
+  const [inputValue, setInputValue] = useState("");
+  const [suggestions, setSuggestions] = useState<GooglePlacePrediction[]>([]);
+  const [ready, setReady] = useState(false);
+  const [searching, setSearching] = useState(false);
   const [loadError, setLoadError] = useState("");
 
   useEffect(() => {
@@ -450,11 +463,10 @@ function DeliveryAddressAutocomplete({
 
   useEffect(() => {
     let cancelled = false;
-    const container = containerRef.current;
 
     async function initialize() {
       const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-      if (!apiKey || !container) {
+      if (!apiKey) {
         setLoadError("Address lookup is unavailable. Please choose pickup or try again shortly.");
         return;
       }
@@ -466,21 +478,9 @@ function DeliveryAddressAutocomplete({
         const mapsWindow = window as GoogleMapsWindow;
         const library = await mapsWindow.google?.maps.importLibrary("places");
         if (!library || cancelled) return;
-
-        const autocomplete = new library.PlaceAutocompleteElement();
-        autocomplete.includedRegionCodes = ["us"];
-        autocomplete.placeholder = "Start typing your street address";
-        autocomplete.addEventListener("gmp-select", async (event) => {
-          const place = (event as GooglePlaceSelectEvent).placePrediction.toPlace();
-          await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
-
-          const county = addressPart(place.addressComponents, "administrative_area_level_2");
-          const state = addressPart(place.addressComponents, "administrative_area_level_1", true);
-          const address = place.formattedAddress ?? "";
-          const eligible = county.toLowerCase() === "monmouth county" && state === "NJ";
-          onAddressSelectedRef.current({ address, county, state, eligible });
-        });
-        container.replaceChildren(autocomplete);
+        placesLibraryRef.current = library;
+        sessionTokenRef.current = new library.AutocompleteSessionToken();
+        setReady(true);
       } catch (error) {
         console.error("Google address lookup failed", error);
         setLoadError("Address lookup could not load. Please refresh the page or choose pickup.");
@@ -490,13 +490,98 @@ function DeliveryAddressAutocomplete({
     void initialize();
     return () => {
       cancelled = true;
-      container?.replaceChildren();
     };
   }, []);
 
+  useEffect(() => {
+    const library = placesLibraryRef.current;
+    const query = inputValue.trim();
+    if (!ready || !library || query.length < 3) {
+      setSuggestions([]);
+      setSearching(false);
+      return;
+    }
+
+    const requestId = newestRequestRef.current + 1;
+    newestRequestRef.current = requestId;
+    setSearching(true);
+    const timer = window.setTimeout(async () => {
+      try {
+        const response = await library.AutocompleteSuggestion.fetchAutocompleteSuggestions({
+          input: query,
+          includedRegionCodes: ["us"],
+          includedPrimaryTypes: ["street_address"],
+          language: "en-US",
+          region: "us",
+          sessionToken: sessionTokenRef.current,
+        });
+        if (newestRequestRef.current !== requestId) return;
+        setSuggestions(
+          response.suggestions
+            .map((suggestion) => suggestion.placePrediction)
+            .filter((prediction): prediction is GooglePlacePrediction => Boolean(prediction)),
+        );
+      } catch (error) {
+        console.error("Google address suggestions failed", error);
+        setLoadError("Address suggestions could not load. Please refresh the page or choose pickup.");
+      } finally {
+        if (newestRequestRef.current === requestId) setSearching(false);
+      }
+    }, 180);
+
+    return () => window.clearTimeout(timer);
+  }, [inputValue, ready]);
+
+  async function chooseSuggestion(prediction: GooglePlacePrediction) {
+    const place = prediction.toPlace();
+    await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
+    const county = addressPart(place.addressComponents, "administrative_area_level_2");
+    const state = addressPart(place.addressComponents, "administrative_area_level_1", true);
+    const address = place.formattedAddress ?? prediction.text.toString();
+    const eligible = county.toLowerCase() === "monmouth county" && state === "NJ";
+
+    setInputValue(address);
+    setSuggestions([]);
+    const library = placesLibraryRef.current;
+    sessionTokenRef.current = library ? new library.AutocompleteSessionToken() : null;
+    onAddressSelectedRef.current({ address, county, state, eligible });
+  }
+
   return (
     <>
-      <div className="google-address-field" ref={containerRef} />
+      <div className="google-address-field">
+        <input
+          aria-autocomplete="list"
+          aria-controls="delivery-address-suggestions"
+          autoComplete="off"
+          placeholder={ready ? "Start typing your street address" : "Loading address search..."}
+          type="text"
+          value={inputValue}
+          disabled={!ready}
+          onChange={(event) => {
+            setInputValue(event.target.value);
+            setLoadError("");
+            onAddressSelectedRef.current({ address: "", county: "", state: "", eligible: false });
+          }}
+        />
+        {suggestions.length > 0 ? (
+          <div className="address-suggestions" id="delivery-address-suggestions" role="listbox">
+            {suggestions.map((prediction) => (
+              <button
+                key={prediction.text.toString()}
+                type="button"
+                role="option"
+                aria-selected="false"
+                onClick={() => void chooseSuggestion(prediction)}
+              >
+                {prediction.text.toString()}
+              </button>
+            ))}
+            <span className="google-attribution">Powered by Google</span>
+          </div>
+        ) : null}
+        {searching ? <span className="address-searching">Finding addresses…</span> : null}
+      </div>
       {loadError ? <span className="address-status invalid">{loadError}</span> : null}
     </>
   );

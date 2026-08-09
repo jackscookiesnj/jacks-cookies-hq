@@ -2926,20 +2926,82 @@ button {
   font-weight: 800;
 }
 
-.google-address-field,
-.google-address-field gmp-place-autocomplete {
-  display: block;
-  width: 100%;
+.google-address-field {
+  position: relative;
 }
 
-.google-address-field gmp-place-autocomplete {
-  color-scheme: light;
-  --gmpx-color-surface: #fffaf6;
-  --gmpx-color-on-surface: #643b1c;
-  --gmpx-color-outline: #643b1c;
-  --gmpx-font-family-base: inherit;
-  --gmpx-font-size-base: 1rem;
-  --gmpx-border-radius: 999px;
+.google-address-field > input {
+  width: 100%;
+  border: 2px solid #643b1c;
+  border-radius: 999px;
+  background: #fffaf6;
+  color: #643b1c;
+  font: inherit;
+  font-weight: 700;
+  padding: 0.95rem 1.25rem;
+  outline: none;
+  transition: border-color 160ms ease, box-shadow 160ms ease;
+}
+
+.google-address-field > input:focus {
+  border-color: #00624b;
+  box-shadow: 0 0 0 4px rgba(0, 98, 75, 0.13);
+}
+
+.google-address-field > input::placeholder {
+  color: rgba(100, 59, 28, 0.62);
+}
+
+.address-suggestions {
+  position: absolute;
+  z-index: 30;
+  top: calc(100% + 0.45rem);
+  left: 0;
+  right: 0;
+  overflow: hidden;
+  border: 2px solid #643b1c;
+  border-radius: 1.25rem;
+  background: #fffaf6;
+  box-shadow: 0 12px 28px rgba(100, 59, 28, 0.18);
+}
+
+.address-suggestions button {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid rgba(100, 59, 28, 0.18);
+  background: transparent;
+  color: #643b1c;
+  font: inherit;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 0.85rem 1rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.address-suggestions button:hover,
+.address-suggestions button:focus-visible {
+  background: #f8cfb8;
+  color: #00624b;
+  outline: none;
+}
+
+.google-attribution {
+  display: block;
+  padding: 0.55rem 1rem;
+  color: rgba(100, 59, 28, 0.62);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.address-searching {
+  display: block;
+  padding: 0.45rem 0.85rem 0;
+  color: rgba(100, 59, 28, 0.7);
+  font-size: 0.82rem;
+  font-weight: 700;
 }
 
 .address-status {
