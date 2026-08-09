@@ -242,7 +242,7 @@ export function PublicOrderForm() {
             )}
           </fieldset>
 
-          <label>
+          <label className="fulfillment-select-field">
             Pickup or delivery
             <select
               name="fulfillment"

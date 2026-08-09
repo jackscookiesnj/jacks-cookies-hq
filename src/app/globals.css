@@ -2196,7 +2196,7 @@ button {
   min-height: 3.65rem;
   border: 2px solid rgba(100, 59, 28, 0.68);
   border-radius: 999px;
-  background: rgba(255, 250, 246, 0.28);
+  background: rgba(255, 250, 246, 0.48);
   color: var(--jc-ink);
   padding: 0.82rem 1rem;
   font-weight: 800;
@@ -2204,13 +2204,17 @@ button {
 }
 
 .quantity-field input,
-.date-select-field select {
+.date-select-field select,
+.fulfillment-select-field select,
+.event-style-field select {
   height: 3.85rem;
   min-height: 3.85rem;
   padding: 0 1rem;
 }
 
-.date-select-field select {
+.date-select-field select,
+.fulfillment-select-field select,
+.event-style-field select {
   font-size: 1.05rem;
   font-weight: 900;
 }
@@ -2219,7 +2223,7 @@ button {
 .order-form select:focus,
 .order-form textarea:focus {
   border-color: var(--jc-teal);
-  background: rgba(255, 250, 246, 0.46);
+  background: rgba(255, 250, 246, 0.62);
   box-shadow: 0 0 0 4px rgba(0, 98, 75, 0.12);
   outline: none;
 }
@@ -2938,7 +2942,7 @@ button {
   width: 100%;
   border: 2px solid #643b1c;
   border-radius: 999px;
-  background: rgba(255, 250, 246, 0.28);
+  background: rgba(255, 250, 246, 0.48);
   color: #643b1c;
   font: inherit;
   font-weight: 700;
