@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 
 export const metadata = {
@@ -9,11 +10,23 @@ export default function OrderConfirmedPage() {
   return (
     <main className="checkout-confirmation">
       <section>
-        <p className="eyebrow">Thank you</p>
+        <Image
+          className="confirmation-logo"
+          src="/brand/jacks-cookies-logo.png"
+          alt="Jack's Cookies"
+          width={720}
+          height={520}
+          priority
+        />
+        <p className="confirmation-kicker">Thank you!</p>
         <h1>Your cookie order is in!</h1>
-        <p>
-          Square will email your payment receipt. We&apos;ll follow up with your pickup or delivery details.
-        </p>
+        <div className="confirmation-details">
+          <strong>Payment received.</strong>
+          <p>
+            We&apos;ll email your Jack&apos;s Cookies confirmation and follow up with pickup or delivery
+            details. Square will send your payment receipt separately.
+          </p>
+        </div>
         <Link className="public-button primary" href="/">
           Back to Jack&apos;s Cookies
         </Link>

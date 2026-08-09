@@ -5,6 +5,7 @@ import { NextResponse } from "next/server";
 const notificationUrl = "https://jacks-cookies.com/api/square/webhook";
 
 type SquareWebhookEvent = {
+  event_id?: string;
   type?: string;
   data?: {
     object?: {
@@ -78,17 +79,152 @@ export async function POST(request: Request) {
   }
 
   const supabase = createClient(supabaseUrl, supabaseKey);
-  const { error } = await supabase
+  const { data: paidOrder, error } = await supabase
     .from("orders")
     .update({ paid: true, payment_status: "paid" })
-    .eq("id", referenceId);
+    .eq("id", referenceId)
+    .select("*")
+    .single();
 
   if (error) {
     console.error("Unable to mark Square order paid", error);
     return NextResponse.json({ error: "Unable to update order." }, { status: 500 });
   }
 
+  const { data: customer, error: customerError } = await supabase
+    .from("customers")
+    .select("*")
+    .eq("id", paidOrder.customer_id)
+    .single();
+
+  if (customerError) {
+    console.error("Unable to retrieve customer for paid order", customerError);
+    return NextResponse.json({ error: "Unable to retrieve customer." }, { status: 500 });
+  }
+
+  try {
+    await sendPaidOrderEmails(paidOrder, customer, referenceId);
+  } catch (emailError) {
+    console.error("Unable to send paid order emails", emailError);
+    return NextResponse.json({ error: "Unable to send order emails." }, { status: 502 });
+  }
+
   return NextResponse.json({ received: true });
+}
+
+async function sendPaidOrderEmails(
+  order: Record<string, unknown>,
+  customer: Record<string, unknown>,
+  referenceId: string,
+) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const ownerEmail = process.env.ORDER_NOTIFICATION_EMAIL;
+  const from = process.env.ORDER_NOTIFICATION_FROM ?? "Jack's Cookies <orders@jacks-cookies.com>";
+  const customerEmail = textValue(customer.email);
+
+  if (!apiKey || !ownerEmail || !customerEmail) {
+    throw new Error("Order email settings are incomplete.");
+  }
+
+  const customerName = textValue(customer.name) || textValue(order.customer_name) || "Customer";
+  const invoiceReference =
+    textValue(order.invoice_reference) || textValue(order.invoice_ref) || `Order ${referenceId}`;
+  const quantity = numberValue(order.cookie_count ?? order.quantity);
+  const total = numberValue(order.revenue ?? order.total);
+  const requestedDate = textValue(order.delivery_date ?? order.order_date);
+  const notes = textValue(order.notes);
+  const phone = textValue(customer.phone);
+  const details = [
+    `Reference: ${invoiceReference}`,
+    `Name: ${customerName}`,
+    `Email: ${customerEmail}`,
+    phone ? `Phone: ${phone}` : "",
+    requestedDate ? `Date: ${formatDate(requestedDate)}` : "",
+    `Quantity: ${quantity} cookies`,
+    `Total paid: $${total.toFixed(2)}`,
+    notes ? `\n${notes}` : "",
+  ].filter(Boolean);
+
+  await sendEmail({
+    apiKey,
+    from,
+    to: ownerEmail,
+    subject: `Paid Jack's Cookies order: ${quantity} cookies`,
+    text: ["A website order has been paid through Square.", "", ...details].join("\n"),
+    idempotencyKey: `paid-order-owner-${referenceId}`,
+  });
+
+  await sendEmail({
+    apiKey,
+    from,
+    to: customerEmail,
+    subject: "Your Jack's Cookies order is confirmed",
+    text: [
+      `Hi ${firstName(customerName)},`,
+      "",
+      "Payment received—your Jack's Cookies order is confirmed.",
+      "We'll follow up with your pickup or delivery details.",
+      "",
+      `Reference: ${invoiceReference}`,
+      requestedDate ? `Date: ${formatDate(requestedDate)}` : "",
+      `Quantity: ${quantity} cookies`,
+      `Total paid: $${total.toFixed(2)}`,
+      "",
+      "One cookie. Done right.",
+      "Jack's Cookies",
+    ]
+      .filter(Boolean)
+      .join("\n"),
+    idempotencyKey: `paid-order-customer-${referenceId}`,
+  });
+}
+
+async function sendEmail({
+  apiKey,
+  from,
+  to,
+  subject,
+  text,
+  idempotencyKey,
+}: {
+  apiKey: string;
+  from: string;
+  to: string;
+  subject: string;
+  text: string;
+  idempotencyKey: string;
+}) {
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify({ from, to, subject, text }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Resend email failed: ${await response.text()}`);
+  }
+}
+
+function textValue(value: unknown) {
+  return typeof value === "string" ? value.trim() : "";
+}
+
+function numberValue(value: unknown) {
+  const number = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(number) ? number : 0;
+}
+
+function formatDate(value: string) {
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+
+function firstName(name: string) {
+  return name.trim().split(/\s+/)[0] || "there";
 }
 
 function hasValidSignature(body: string, signature: string, signatureKey: string) {
