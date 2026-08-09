@@ -1412,6 +1412,13 @@ button {
 
 .event-art-heading {
   width: min(28rem, 78vw);
+  background: #e26226;
+  -webkit-mask: url("/brand/headlines/planning-an-event-solid-teal.png") center / contain no-repeat;
+  mask: url("/brand/headlines/planning-an-event-solid-teal.png") center / contain no-repeat;
+}
+
+.event-art-heading img {
+  opacity: 0;
 }
 
 .story-art-heading {
@@ -2113,6 +2120,10 @@ button {
   font-weight: 900;
 }
 
+.quantity-field > span {
+  font-size: 0.72rem;
+}
+
 .public-form-grid {
   display: grid;
   gap: 1rem;
@@ -2164,6 +2175,16 @@ button {
   text-transform: uppercase;
 }
 
+.order-form label {
+  text-indent: 1rem;
+}
+
+.order-form label > input,
+.order-form label > select,
+.order-form label > textarea {
+  text-indent: 0;
+}
+
 .order-form fieldset {
   border: 0;
   margin: 0;
@@ -2201,6 +2222,11 @@ button {
   padding: 0.82rem 1rem;
   font-weight: 800;
   transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
+}
+
+.order-form input,
+.order-form select {
+  height: 3.85rem;
 }
 
 .order-form select {
@@ -2940,6 +2966,7 @@ button {
 .delivery-address-block .field-label {
   color: #00624b;
   font-weight: 800;
+  padding-inline: 1rem;
 }
 
 .google-address-field {
@@ -2948,6 +2975,7 @@ button {
 
 .google-address-field > input {
   width: 100%;
+  height: 3.85rem;
   border: 2px solid #643b1c;
   border-radius: 999px;
   background: rgba(255, 250, 246, 0.48);

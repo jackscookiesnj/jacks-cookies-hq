@@ -185,7 +185,7 @@ export function PublicOrderForm() {
       </div>
 
       {mode === "standard" ? (
-        <form className="order-form" onSubmit={handleStandardSubmit}>
+        <form className="order-form" key="standard-order" onSubmit={handleStandardSubmit}>
           <div className="order-summary-card">
             <div>
               <h3 className="art-heading everyday-art-heading">
@@ -334,7 +334,7 @@ export function PublicOrderForm() {
           ) : null}
         </form>
       ) : (
-        <form className="order-form event-form" onSubmit={handleEventSubmit}>
+        <form className="order-form event-form" key="event-order" onSubmit={handleEventSubmit}>
           <div className="order-summary-card">
             <div>
               <h3 className="art-heading event-art-heading">
