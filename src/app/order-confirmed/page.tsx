@@ -12,10 +12,10 @@ export default function OrderConfirmedPage() {
       <section>
         <Image
           className="confirmation-logo"
-          src="/brand/jacks-cookies-logo.png"
+          src="/brand/rebrand/full-lockup.png"
           alt="Jack's Cookies"
-          width={720}
-          height={520}
+          width={1600}
+          height={1600}
           priority
         />
         <p className="confirmation-kicker">Thank you!</p>

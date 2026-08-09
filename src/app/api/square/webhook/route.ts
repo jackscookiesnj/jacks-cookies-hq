@@ -175,8 +175,82 @@ async function sendPaidOrderEmails(
     ]
       .filter(Boolean)
       .join("\n"),
-    idempotencyKey: `paid-order-customer-${referenceId}`,
+    html: customerConfirmationHtml({
+      customerName,
+      invoiceReference,
+      requestedDate,
+      quantity,
+      total,
+    }),
+    idempotencyKey: `paid-order-customer-v2-${referenceId}`,
   });
+}
+
+function customerConfirmationHtml({
+  customerName,
+  invoiceReference,
+  requestedDate,
+  quantity,
+  total,
+}: {
+  customerName: string;
+  invoiceReference: string;
+  requestedDate: string;
+  quantity: number;
+  total: number;
+}) {
+  const detailRow = (label: string, value: string) => `
+    <tr>
+      <td style="padding:8px 0;color:#643b1c;font-size:14px;font-weight:700;">${label}</td>
+      <td style="padding:8px 0;color:#00624b;font-size:14px;font-weight:800;text-align:right;">${escapeHtml(value)}</td>
+    </tr>`;
+
+  return `<!doctype html>
+  <html>
+    <body style="margin:0;background:#f8cfb8;color:#643b1c;font-family:Georgia,'Times New Roman',serif;">
+      <div style="display:none;max-height:0;overflow:hidden;">Payment received—your Jack's Cookies order is confirmed!</div>
+      <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="background:#f8cfb8;padding:28px 12px;">
+        <tr><td align="center">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:580px;border:2px solid #643b1c;border-radius:28px;background:#fff4ee;overflow:hidden;">
+            <tr>
+              <td align="center" style="padding:32px 28px 12px;">
+                <img src="https://jacks-cookies.com/brand/rebrand/full-lockup.png" width="180" alt="Jack's Cookies" style="display:block;width:180px;max-width:60%;height:auto;">
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0 28px 30px;">
+                <p style="margin:0 0 8px;color:#e26226;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">Payment received</p>
+                <h1 style="margin:0;color:#00624b;font-size:38px;line-height:1.05;">Your order is confirmed!</h1>
+                <p style="margin:18px auto 0;max-width:440px;color:#643b1c;font-size:17px;line-height:1.55;">
+                  Hi ${escapeHtml(firstName(customerName))}! Thanks so much for ordering Jack's Cookies. We&apos;re excited to bake for you.
+                </p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:0 34px 28px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-top:2px solid #f3bc93;border-bottom:2px solid #f3bc93;padding:12px 0;">
+                  ${detailRow("Order", invoiceReference)}
+                  ${requestedDate ? detailRow("Date", formatDate(requestedDate)) : ""}
+                  ${detailRow("Quantity", `${quantity} cookies`)}
+                  ${detailRow("Total paid", `$${total.toFixed(2)}`)}
+                </table>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="padding:0 34px 34px;">
+                <h2 style="margin:0 0 8px;color:#e26226;font-size:20px;">What happens next?</h2>
+                <p style="margin:0 0 24px;color:#643b1c;font-size:16px;line-height:1.5;">We&apos;ll follow up with your pickup or delivery details. Square will send your payment receipt separately.</p>
+                <a href="https://jacks-cookies.com" style="display:inline-block;border-radius:999px;background:#00624b;color:#fff4ee;padding:14px 28px;font-size:16px;font-weight:800;text-decoration:none;">Back to Jack's Cookies</a>
+              </td>
+            </tr>
+            <tr>
+              <td align="center" style="background:#00624b;padding:18px;color:#fff4ee;font-size:13px;">One cookie. Done right. &nbsp;•&nbsp; Jack's Cookies</td>
+            </tr>
+          </table>
+        </td></tr>
+      </table>
+    </body>
+  </html>`;
 }
 
 async function sendEmail({
@@ -185,6 +259,7 @@ async function sendEmail({
   to,
   subject,
   text,
+  html,
   idempotencyKey,
 }: {
   apiKey: string;
@@ -192,6 +267,7 @@ async function sendEmail({
   to: string;
   subject: string;
   text: string;
+  html?: string;
   idempotencyKey: string;
 }) {
   const response = await fetch("https://api.resend.com/emails", {
@@ -201,12 +277,21 @@ async function sendEmail({
       "Content-Type": "application/json",
       "Idempotency-Key": idempotencyKey,
     },
-    body: JSON.stringify({ from, to, subject, text }),
+    body: JSON.stringify({ from, to, subject, text, ...(html ? { html } : {}) }),
   });
 
   if (!response.ok) {
     throw new Error(`Resend email failed: ${await response.text()}`);
   }
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 function textValue(value: unknown) {
