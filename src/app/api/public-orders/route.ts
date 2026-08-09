@@ -77,6 +77,17 @@ export async function POST(request: Request) {
 
     if (error) throw error;
 
+    if (payload.mode === "standard") {
+      const checkoutUrl = await createSquareCheckout(request, payload, order.id, invoiceReference);
+
+      return NextResponse.json({
+        ok: true,
+        orderId: order.id,
+        invoiceReference: order.invoice_reference,
+        checkoutUrl,
+      });
+    }
+
     await sendOrderNotification(payload, invoiceReference, revenue).catch((error) => {
       console.error("Order notification email failed", error);
     });
@@ -96,6 +107,85 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+}
+
+async function createSquareCheckout(
+  request: Request,
+  payload: PublicOrderPayload,
+  orderId: string | number,
+  invoiceReference: string,
+) {
+  const accessToken = process.env.SQUARE_ACCESS_TOKEN;
+  const locationId = process.env.SQUARE_LOCATION_ID;
+  const environment = process.env.SQUARE_ENVIRONMENT === "production" ? "production" : "sandbox";
+
+  if (!accessToken || !locationId) {
+    throw new Error("Square checkout is not configured yet.");
+  }
+
+  const apiBase =
+    environment === "production"
+      ? "https://connect.squareup.com"
+      : "https://connect.squareupsandbox.com";
+  const origin = new URL(request.url).origin;
+  const lineItems: Array<Record<string, unknown>> = [
+    {
+      name: "The Everyday Chocolate Chip Cookie",
+      quantity: String(payload.quantity),
+      base_price_money: { amount: 300, currency: "USD" },
+    },
+  ];
+
+  if (payload.fulfillment === "delivery") {
+    lineItems.push({
+      name: "Local delivery",
+      quantity: "1",
+      base_price_money: { amount: deliveryFee * 100, currency: "USD" },
+    });
+  }
+
+  const response = await fetch(`${apiBase}/v2/online-checkout/payment-links`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+      "Square-Version": "2026-07-15",
+    },
+    body: JSON.stringify({
+      idempotency_key: crypto.randomUUID(),
+      description: invoiceReference,
+      order: {
+        location_id: locationId,
+        reference_id: String(orderId),
+        line_items: lineItems,
+      },
+      checkout_options: {
+        allow_tipping: false,
+        redirect_url: `${origin}/order-confirmed`,
+        accepted_payment_methods: {
+          apple_pay: true,
+          google_pay: true,
+          cash_app_pay: false,
+          afterpay_clearpay: false,
+        },
+      },
+      pre_populated_data: {
+        buyer_email: payload.email,
+      },
+      payment_note: `Jack's Cookies website order ${orderId}`,
+    }),
+  });
+  const result = (await response.json()) as {
+    errors?: Array<{ detail?: string; code?: string }>;
+    payment_link?: { url?: string };
+  };
+
+  if (!response.ok || !result.payment_link?.url) {
+    const detail = result.errors?.[0]?.detail ?? result.errors?.[0]?.code;
+    throw new Error(detail || "Unable to open Square checkout. Please try again.");
+  }
+
+  return result.payment_link.url;
 }
 
 function normalizePayload(input: unknown): PublicOrderPayload {
@@ -297,7 +387,7 @@ async function sendCustomerConfirmation(
         `Hi ${firstName(payload.name)},`,
         "",
         isEvent
-          ? "Thanks for thinking of Jack's Cookies for your event. We received your request and will email you soon to confirm availability, payment, and order details."
+          ? "Thanks for thinking of Jack's Cookies for your event. We received your request. Your date is not reserved yet—we'll email you soon to confirm availability, final pricing, and payment."
           : "Thanks for ordering Jack's Cookies. We received your request and will email you soon to confirm payment and order details.",
         "",
         "Request details:",
@@ -343,6 +433,7 @@ function formatDate(value: string) {
 }
 
 function paymentLabel(value: string) {
+  if (value === "square") return "Credit card through Square";
   if (value === "venmo") return "Venmo @jacks-cookies";
   if (value === "cash") return "Cash";
   return "Credit card";

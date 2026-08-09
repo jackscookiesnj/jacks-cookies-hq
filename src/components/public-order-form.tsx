@@ -102,6 +102,11 @@ export function PublicOrderForm() {
         throw new Error(data.error || "Unable to submit order.");
       }
 
+      if (payload.mode === "standard" && data.checkoutUrl) {
+        window.location.assign(data.checkoutUrl);
+        return;
+      }
+
       setSubmitted(payload.mode === "event" ? "event" : "standard");
     } catch (error) {
       setSubmitError(error instanceof Error ? error.message : "Unable to submit order.");
@@ -193,28 +198,19 @@ export function PublicOrderForm() {
             )}
           </fieldset>
 
-          <div className="form-options-grid">
-            <label>
-              Pickup or delivery
-              <select
-                name="fulfillment"
-                value={fulfillment}
-                onChange={(event) => setFulfillment(event.target.value as Fulfillment)}
-              >
-                <option value="pickup">Pickup — free</option>
-                <option value="delivery">Local delivery — $6</option>
-              </select>
-            </label>
+          <label>
+            Pickup or delivery
+            <select
+              name="fulfillment"
+              value={fulfillment}
+              onChange={(event) => setFulfillment(event.target.value as Fulfillment)}
+            >
+              <option value="pickup">Pickup — free</option>
+              <option value="delivery">Local delivery — $6</option>
+            </select>
+          </label>
 
-            <label>
-              Payment
-              <select name="payment" defaultValue="card">
-                <option value="card">Credit card</option>
-                <option value="venmo">Venmo @jacks-cookies</option>
-                <option value="cash">Cash</option>
-              </select>
-            </label>
-          </div>
+          <input name="payment" type="hidden" value="square" />
 
           {fulfillment === "delivery" ? (
             <label>
@@ -256,8 +252,10 @@ export function PublicOrderForm() {
           </details>
 
           <button className="public-button primary submit-button" disabled={submitting} type="submit">
-            {submitting ? "Sending..." : "Send order request"}
+            {submitting ? "Opening secure checkout..." : `Continue to checkout — ${formatMoney(total)}`}
           </button>
+
+          <p className="form-note">Secure credit-card checkout powered by Square.</p>
 
           {submitted === "standard" ? (
             <p className="success-message" role="status">
@@ -284,7 +282,7 @@ export function PublicOrderForm() {
                   height={393}
                 />
               </h3>
-              <p>Cookies, cookie cart, or both.</p>
+              <p>Send an inquiry to check your date. No payment is due yet.</p>
             </div>
           </div>
 
@@ -360,8 +358,8 @@ export function PublicOrderForm() {
 
           {submitted === "event" ? (
             <p className="success-message" role="status">
-              Event request received. We&apos;ll email you soon to confirm
-              availability, payment, and order details.
+              Event request received. Your date is not reserved yet—we&apos;ll email you to confirm
+              availability, final pricing, and payment.
             </p>
           ) : null}
           {submitError ? (
