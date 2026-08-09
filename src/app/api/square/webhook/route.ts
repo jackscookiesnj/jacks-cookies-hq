@@ -163,6 +163,7 @@ async function sendPaidOrderEmails(
       `Hi ${firstName(customerName)},`,
       "",
       "Payment received—your Jack's Cookies order is confirmed.",
+      "Thank you so much for supporting our small business. We're so excited to bake for you.",
       "We'll follow up with your pickup or delivery details.",
       "",
       `Reference: ${invoiceReference}`,
@@ -182,7 +183,7 @@ async function sendPaidOrderEmails(
       quantity,
       total,
     }),
-    idempotencyKey: `paid-order-customer-v2-${referenceId}`,
+    idempotencyKey: `paid-order-customer-v3-${referenceId}`,
   });
 }
 
@@ -222,7 +223,7 @@ function customerConfirmationHtml({
                 <p style="margin:0 0 8px;color:#e26226;font-size:13px;font-weight:800;letter-spacing:2px;text-transform:uppercase;">Payment received</p>
                 <h1 style="margin:0;color:#00624b;font-size:38px;line-height:1.05;">Your order is confirmed!</h1>
                 <p style="margin:18px auto 0;max-width:440px;color:#643b1c;font-size:17px;line-height:1.55;">
-                  Hi ${escapeHtml(firstName(customerName))}! Thanks so much for ordering Jack's Cookies. We&apos;re excited to bake for you.
+                  Hi ${escapeHtml(firstName(customerName))}! Thank you so much for supporting our small business. We&apos;re so excited to bake for you.
                 </p>
               </td>
             </tr>
