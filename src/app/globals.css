@@ -2053,7 +2053,7 @@ button {
 
 .order-form {
   display: grid;
-  gap: 1.05rem;
+  gap: 1.35rem 1rem;
   border: 0;
   border-radius: 0;
   background: transparent;
@@ -2115,7 +2115,8 @@ button {
 
 .public-form-grid {
   display: grid;
-  gap: 0.8rem;
+  gap: 1rem;
+  padding-top: 0.3rem;
 }
 
 .form-options-grid {
@@ -2154,7 +2155,7 @@ button {
 .order-form label,
 .order-form fieldset {
   display: grid;
-  gap: 0.42rem;
+  gap: 0.55rem;
   min-width: 0;
   color: var(--jc-teal);
   font-size: 0.88rem;
@@ -2192,21 +2193,21 @@ button {
 .order-form select,
 .order-form textarea {
   width: 100%;
-  border: 0;
-  border-bottom: 2px solid rgba(8, 79, 73, 0.38);
-  border-radius: 0;
-  background: transparent;
+  min-height: 3.65rem;
+  border: 2px solid rgba(100, 59, 28, 0.68);
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.28);
   color: var(--jc-ink);
-  padding: 0.78rem 0.2rem;
+  padding: 0.82rem 1rem;
   font-weight: 800;
+  transition: border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
 .quantity-field input,
 .date-select-field select {
   height: 3.85rem;
   min-height: 3.85rem;
-  border-width: 0 0 2px;
-  padding: 0 0.2rem;
+  padding: 0 1rem;
 }
 
 .date-select-field select {
@@ -2217,11 +2218,14 @@ button {
 .order-form input:focus,
 .order-form select:focus,
 .order-form textarea:focus {
-  border-color: var(--jc-orange);
+  border-color: var(--jc-teal);
+  background: rgba(255, 250, 246, 0.46);
+  box-shadow: 0 0 0 4px rgba(0, 98, 75, 0.12);
   outline: none;
 }
 
 .order-form textarea {
+  border-radius: 1.5rem;
   resize: vertical;
 }
 
@@ -2934,7 +2938,7 @@ button {
   width: 100%;
   border: 2px solid #643b1c;
   border-radius: 999px;
-  background: #f8cfb8;
+  background: rgba(255, 250, 246, 0.28);
   color: #643b1c;
   font: inherit;
   font-weight: 700;
