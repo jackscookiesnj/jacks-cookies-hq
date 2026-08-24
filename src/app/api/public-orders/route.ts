@@ -21,6 +21,7 @@ type PublicOrderPayload = {
   deliveryAddress?: string;
   deliveryCounty?: string;
   deliveryState?: string;
+  noFlakySalt?: boolean;
   payment: string;
   notes?: string;
   eventLocation?: string;
@@ -241,6 +242,7 @@ function normalizePayload(input: unknown): PublicOrderPayload {
     deliveryAddress,
     deliveryCounty,
     deliveryState,
+    noFlakySalt: data.noFlakySalt === true,
     payment: stringValue(data.payment) || "card",
     notes: stringValue(data.notes),
     eventLocation: stringValue(data.eventLocation),
@@ -312,6 +314,7 @@ function buildOrderNotes(payload: PublicOrderPayload) {
     lines.push(`Fulfillment: ${payload.fulfillment === "delivery" ? "Monmouth County delivery" : "Pickup"}.`);
     if (payload.fulfillment === "delivery") lines.push(`Delivery fee: $${deliveryFee.toFixed(2)}.`);
     if (payload.deliveryAddress) lines.push(`Delivery address: ${payload.deliveryAddress}.`);
+    if (payload.noFlakySalt) lines.push("NO FLAKY SALT.");
   }
 
   if (payload.mode === "event") {

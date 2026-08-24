@@ -2163,6 +2163,49 @@ button {
   margin-bottom: 0.85rem;
 }
 
+.order-form .salt-preference {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  width: fit-content;
+  max-width: 100%;
+  justify-self: start;
+  align-items: center;
+  gap: 0.8rem;
+  border: 2px solid rgba(100, 59, 28, 0.68);
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.48);
+  padding: 0.75rem 1.15rem;
+  cursor: pointer;
+  text-indent: 0;
+  text-transform: none;
+}
+
+.order-form .salt-preference input {
+  width: 1.35rem;
+  height: 1.35rem;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--jc-orange);
+}
+
+.salt-preference span {
+  display: grid;
+  gap: 0.12rem;
+  color: var(--jc-ink);
+  font-size: 0.86rem;
+  font-weight: 650;
+  letter-spacing: normal;
+}
+
+.salt-preference strong {
+  color: var(--jc-teal);
+  font-size: 0.9rem;
+  font-weight: 950;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
 .order-form label,
 .order-form fieldset {
   display: grid;
@@ -2561,6 +2604,7 @@ button {
   .public-form-grid,
 .notes-field,
 .form-options-grid,
+.salt-preference,
 .optional-notes,
 .submit-button,
   .success-message {

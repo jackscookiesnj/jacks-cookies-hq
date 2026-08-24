@@ -105,6 +105,7 @@ export function PublicOrderForm() {
       deliveryAddress: formValue(data, "delivery_address"),
       deliveryCounty: formValue(data, "delivery_county"),
       deliveryState: formValue(data, "delivery_state"),
+      noFlakySalt: data.get("no_flaky_salt") === "on",
       payment: formValue(data, "payment"),
       notes: formValue(data, "notes"),
     });
@@ -298,6 +299,14 @@ export function PublicOrderForm() {
               <input name="phone" type="tel" autoComplete="tel" required />
             </label>
           </div>
+
+          <label className="salt-preference">
+            <input name="no_flaky_salt" type="checkbox" />
+            <span>
+              <strong>No flaky salt</strong>
+              Please leave the flaky salt off my cookies.
+            </span>
+          </label>
 
           <details className="optional-notes">
             <summary>Add a note <span>(optional)</span></summary>

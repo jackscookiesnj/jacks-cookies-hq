@@ -1229,6 +1229,7 @@ function OrderCard({
         <span className={`pill ${isDoughPrepped(order) ? "green" : "red"}`}>
           {isDoughPrepped(order) ? "dough ready" : "dough needed"}
         </span>
+        {hasNoFlakySaltPreference(order) ? <span className="pill red">NO FLAKY SALT</span> : null}
       </div>
       <div className="card-actions">
         <button className="button primary" onClick={() => downloadInvoice(order)} type="button">
@@ -2328,6 +2329,10 @@ function safeFileName(value: string) {
 }
 
 const doughPreppedMarker = "[Dough prepped]";
+
+function hasNoFlakySaltPreference(order: Pick<Order, "notes">) {
+  return /\bNO FLAKY SALT\b/i.test(order.notes ?? "");
+}
 
 function isDoughPrepped(order: Pick<Order, "dough_prepped" | "dough_prep">) {
   return Boolean(order.dough_prepped) || (order.dough_prep ?? "").startsWith(doughPreppedMarker);
