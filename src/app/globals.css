@@ -1410,6 +1410,15 @@ button {
   width: min(22rem, 72vw);
 }
 
+.flavor-order-title {
+  margin: 0;
+  color: var(--jc-teal);
+  font-family: var(--jc-display-font);
+  font-size: clamp(1.75rem, 6vw, 2.8rem);
+  line-height: 0.9;
+  text-transform: uppercase;
+}
+
 .event-art-heading {
   width: min(28rem, 78vw);
   background: #e26226;
@@ -2124,6 +2133,53 @@ button {
   font-size: 0.72rem;
 }
 
+.flavor-quantity-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+.flavor-quantity-field {
+  align-content: start;
+}
+
+.flavor-quantity-field strong {
+  color: var(--jc-teal);
+  font-size: 1rem;
+  font-weight: 950;
+}
+
+.flavor-quantity-field em {
+  color: var(--jc-ink);
+  font-size: 0.86rem;
+  font-style: normal;
+  font-weight: 750;
+  letter-spacing: normal;
+  line-height: 1.35;
+  text-transform: none;
+}
+
+.flavor-quantity-field > .flavor-price {
+  color: var(--jc-orange);
+  font-size: 0.92rem;
+  font-weight: 950;
+  letter-spacing: normal;
+  line-height: 1.2;
+  text-transform: none;
+}
+
+.flavor-quantity-field > .flavor-description {
+  color: var(--jc-ink);
+  font-size: 0.88rem;
+  font-weight: 600;
+  letter-spacing: normal;
+  line-height: 1.5;
+  text-transform: none;
+}
+
+.flavor-minimum-note {
+  margin-top: -0.35rem;
+}
+
 .public-form-grid {
   display: grid;
   gap: 1rem;
@@ -2604,6 +2660,8 @@ button {
   .public-form-grid,
 .notes-field,
 .form-options-grid,
+.flavor-quantity-grid,
+.flavor-minimum-note,
 .salt-preference,
 .optional-notes,
 .submit-button,
@@ -2613,6 +2671,10 @@ button {
 
   .public-form-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .flavor-quantity-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .pickup-day-grid {

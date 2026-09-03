@@ -9,6 +9,8 @@ const standardMinimum = 3;
 const eventMinimum = 24;
 const maximumQuantity = 1000;
 const deliveryFee = 6;
+const jacksOriginalPrice = 3;
+const aliPrice = 2.75;
 
 type PublicOrderPayload = {
   mode: "standard" | "event";
@@ -16,6 +18,8 @@ type PublicOrderPayload = {
   email: string;
   phone: string;
   quantity: number;
+  jacksOriginalQuantity?: number;
+  aliQuantity?: number;
   requestedDate: string;
   fulfillment?: "pickup" | "delivery";
   deliveryAddress?: string;
@@ -43,8 +47,11 @@ export async function POST(request: Request) {
     const now = new Date().toISOString();
     const customer = await findOrCreateCustomer(supabase, payload, now);
     const invoiceReference = `${payload.name} - ${formatDate(payload.requestedDate)}`;
+    const cookieRevenue = payload.mode === "standard"
+      ? (payload.jacksOriginalQuantity ?? payload.quantity) * jacksOriginalPrice + (payload.aliQuantity ?? 0) * aliPrice
+      : payload.quantity * jacksOriginalPrice;
     const revenue = roundMoney(
-      payload.quantity * 3 +
+      cookieRevenue +
         (payload.mode === "standard" && payload.fulfillment === "delivery" ? deliveryFee : 0),
     );
     const orderPayload = {
@@ -62,8 +69,8 @@ export async function POST(request: Request) {
       cookie_size: "2oz",
       cookie_count: payload.quantity,
       quantity: payload.quantity,
-      price_per_cookie: 3,
-      price: 3,
+      price_per_cookie: roundMoney(cookieRevenue / payload.quantity),
+      price: roundMoney(cookieRevenue / payload.quantity),
       cost_per_cookie: 0.85,
       revenue,
       total: revenue,
@@ -81,7 +88,15 @@ export async function POST(request: Request) {
     if (error) throw error;
 
     if (payload.mode === "standard") {
-      const checkoutUrl = await createSquareCheckout(request, payload, order.id, invoiceReference);
+      let checkoutUrl: string;
+      try {
+        checkoutUrl = await createSquareCheckout(request, payload, order.id, invoiceReference);
+      } catch (error) {
+        await sendCheckoutFailureNotification(payload, invoiceReference, revenue, String(order.id)).catch((emailError) => console.error("Checkout failure notification failed", emailError));
+        throw error;
+      }
+
+      await sendPendingCheckoutEmails({ payload, invoiceReference, revenue, checkoutUrl, orderId: String(order.id) });
 
       return NextResponse.json({
         ok: true,
@@ -131,13 +146,9 @@ async function createSquareCheckout(
       ? "https://connect.squareup.com"
       : "https://connect.squareupsandbox.com";
   const origin = new URL(request.url).origin;
-  const lineItems: Array<Record<string, unknown>> = [
-    {
-      name: "The Everyday Chocolate Chip Cookie",
-      quantity: String(payload.quantity),
-      base_price_money: { amount: 300, currency: "USD" },
-    },
-  ];
+  const lineItems: Array<Record<string, unknown>> = [];
+  if ((payload.jacksOriginalQuantity ?? 0) > 0) lineItems.push({ name: "Jack's Original — The Chocolate Chip Cookie", quantity: String(payload.jacksOriginalQuantity), base_price_money: { amount: 300, currency: "USD" } });
+  if ((payload.aliQuantity ?? 0) > 0) lineItems.push({ name: "The Ali — The Salted Hemp Seed Cookie", quantity: String(payload.aliQuantity), base_price_money: { amount: 275, currency: "USD" } });
 
   if (payload.fulfillment === "delivery") {
     lineItems.push({
@@ -191,6 +202,34 @@ async function createSquareCheckout(
   return result.payment_link.url;
 }
 
+async function sendPendingCheckoutEmails({ payload, invoiceReference, revenue, checkoutUrl, orderId }: { payload: PublicOrderPayload; invoiceReference: string; revenue: number; checkoutUrl: string; orderId: string }) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const ownerEmail = process.env.ORDER_NOTIFICATION_EMAIL;
+  const from = process.env.ORDER_NOTIFICATION_FROM ?? "Jack's Cookies <orders@jacks-cookies.com>";
+  if (!apiKey || !ownerEmail) return;
+  const fulfillment = payload.fulfillment === "delivery" ? "Monmouth County delivery" : "Pickup";
+  const flavors = standardFlavorLines(payload);
+  const emails = [
+    sendTransactionalEmail({ apiKey, from, to: ownerEmail, subject: `New order started — payment pending: ${payload.name}`, idempotencyKey: `pending-checkout-owner-${orderId}`, text: ["A customer started an order but has not paid yet.", "", `Reference: ${invoiceReference}`, `Name: ${payload.name}`, `Email: ${payload.email}`, `Phone: ${payload.phone}`, `Date: ${formatDate(payload.requestedDate)}`, ...flavors, `Total: $${revenue.toFixed(2)}`, `Fulfillment: ${fulfillment}`, payload.deliveryAddress ? `Delivery address: ${payload.deliveryAddress}` : "", payload.noFlakySalt ? "Cookie preference: NO FLAKY SALT" : "", "", "Status: PAYMENT PENDING — do not fulfill until Square confirms payment."].filter(Boolean).join("\n") }),
+    sendTransactionalEmail({ apiKey, from, to: payload.email, subject: "Complete your Jack's Cookies order", idempotencyKey: `pending-checkout-customer-${orderId}`, text: [`Hi ${firstName(payload.name)},`, "", "We received your order details, but your Jack's Cookies order is not confirmed until payment is completed.", "", ...flavors, `Total: $${revenue.toFixed(2)}`, `Date: ${formatDate(payload.requestedDate)}`, `Fulfillment: ${fulfillment}`, payload.noFlakySalt ? "Cookie preference: No flaky salt" : "", "", "Complete your secure Square payment here:", checkoutUrl, "", "If you already paid, no action is needed. You'll receive a separate confirmation when Square confirms your payment.", "", "One cookie. Done right.", "Jack's Cookies"].filter(Boolean).join("\n") }),
+  ];
+  const results = await Promise.allSettled(emails);
+  results.forEach((result) => { if (result.status === "rejected") console.error("Pending checkout email failed", result.reason); });
+}
+
+async function sendCheckoutFailureNotification(payload: PublicOrderPayload, invoiceReference: string, revenue: number, orderId: string) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const to = process.env.ORDER_NOTIFICATION_EMAIL;
+  const from = process.env.ORDER_NOTIFICATION_FROM ?? "Jack's Cookies <orders@jacks-cookies.com>";
+  if (!apiKey || !to) return;
+  await sendTransactionalEmail({ apiKey, from, to, subject: `Checkout problem — follow up with ${payload.name}`, idempotencyKey: `checkout-failed-${orderId}`, text: ["A customer submitted an order, but Square checkout could not be opened.", "", `Reference: ${invoiceReference}`, `Name: ${payload.name}`, `Email: ${payload.email}`, `Phone: ${payload.phone}`, ...standardFlavorLines(payload), `Total: $${revenue.toFixed(2)}`, "", "Please follow up with the customer. This order has not been paid."].join("\n") });
+}
+
+async function sendTransactionalEmail({ apiKey, from, to, subject, text, idempotencyKey }: { apiKey: string; from: string; to: string; subject: string; text: string; idempotencyKey: string }) {
+  const response = await fetch("https://api.resend.com/emails", { method: "POST", headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json", "Idempotency-Key": idempotencyKey }, body: JSON.stringify({ from, to, subject, text }) });
+  if (!response.ok) throw new Error(`Resend email failed: ${await response.text()}`);
+}
+
 function normalizePayload(input: unknown): PublicOrderPayload {
   if (!input || typeof input !== "object") {
     throw new Error("Missing order details.");
@@ -199,7 +238,11 @@ function normalizePayload(input: unknown): PublicOrderPayload {
   const data = input as Record<string, unknown>;
   const mode = data.mode === "event" ? "event" : "standard";
   const email = stringValue(data.email).toLowerCase();
-  const quantity = Number(data.quantity);
+  const jacksOriginalQuantity = nonnegativeInteger(
+    data.jacksOriginalQuantity ?? (mode === "standard" ? data.quantity : 0),
+  );
+  const aliQuantity = nonnegativeInteger(data.aliQuantity);
+  const quantity = mode === "standard" ? jacksOriginalQuantity + aliQuantity : Number(data.quantity);
   const requestedDate = stringValue(data.requestedDate);
 
   if (!stringValue(data.name)) throw new Error("Name is required.");
@@ -237,6 +280,8 @@ function normalizePayload(input: unknown): PublicOrderPayload {
     email,
     phone: stringValue(data.phone),
     quantity,
+    jacksOriginalQuantity: mode === "standard" ? jacksOriginalQuantity : undefined,
+    aliQuantity: mode === "standard" ? aliQuantity : undefined,
     requestedDate,
     fulfillment,
     deliveryAddress,
@@ -311,6 +356,7 @@ function buildOrderNotes(payload: PublicOrderPayload) {
   ];
 
   if (payload.mode === "standard") {
+    lines.push(...standardFlavorLines(payload).map((line) => `${line}.`));
     lines.push(`Fulfillment: ${payload.fulfillment === "delivery" ? "Monmouth County delivery" : "Pickup"}.`);
     if (payload.fulfillment === "delivery") lines.push(`Delivery fee: $${deliveryFee.toFixed(2)}.`);
     if (payload.deliveryAddress) lines.push(`Delivery address: ${payload.deliveryAddress}.`);
@@ -335,6 +381,13 @@ function customerNotes(payload: PublicOrderPayload) {
   return payload.mode === "event"
     ? `Website event inquiry${payload.occasion ? `: ${payload.occasion}` : ""}`
     : "Website customer";
+}
+
+function standardFlavorLines(payload: PublicOrderPayload) {
+  const lines: string[] = [];
+  if ((payload.jacksOriginalQuantity ?? 0) > 0) lines.push(`Jack's Original: ${payload.jacksOriginalQuantity}`);
+  if ((payload.aliQuantity ?? 0) > 0) lines.push(`The Ali: ${payload.aliQuantity}`);
+  return lines;
 }
 
 async function sendOrderNotification(
@@ -440,6 +493,11 @@ async function sendCustomerConfirmation(
 
 function stringValue(value: unknown) {
   return typeof value === "string" ? value.trim() : "";
+}
+
+function nonnegativeInteger(value: unknown) {
+  const quantity = Number(value);
+  return Number.isInteger(quantity) && quantity >= 0 ? quantity : Number.NaN;
 }
 
 function roundMoney(value: number) {

@@ -3,8 +3,8 @@
 import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 
-const cookieName = "The Everyday";
-const regularPrice = 3;
+const jacksOriginalPrice = 3;
+const aliPrice = 2.75;
 const deliveryFee = 6;
 const standardMinimum = 3;
 const eventMinimum = 24;
@@ -61,7 +61,8 @@ const dayLabels = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Frid
 export function PublicOrderForm() {
   const [mode, setMode] = useState<OrderMode>("standard");
   const [fulfillment, setFulfillment] = useState<Fulfillment>("pickup");
-  const [quantityInput, setQuantityInput] = useState("12");
+  const [jacksOriginalInput, setJacksOriginalInput] = useState("12");
+  const [aliInput, setAliInput] = useState("0");
   const [submitted, setSubmitted] = useState<OrderMode | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
@@ -71,9 +72,10 @@ export function PublicOrderForm() {
   const [deliveryEligible, setDeliveryEligible] = useState<boolean | null>(null);
 
   const pickupDays = useMemo(() => getAvailablePickupDays(new Date()), []);
-  const unitPrice = regularPrice;
-  const quantity = normalizeQuantity(quantityInput, standardMinimum);
-  const subtotal = quantity * unitPrice;
+  const jacksOriginalQuantity = normalizeFlavorQuantity(jacksOriginalInput);
+  const aliQuantity = normalizeFlavorQuantity(aliInput);
+  const quantity = jacksOriginalQuantity + aliQuantity;
+  const subtotal = jacksOriginalQuantity * jacksOriginalPrice + aliQuantity * aliPrice;
   const total = subtotal + (fulfillment === "delivery" ? deliveryFee : 0);
 
   useEffect(() => {
@@ -100,6 +102,8 @@ export function PublicOrderForm() {
       email: formValue(data, "email"),
       phone: formValue(data, "phone"),
       quantity,
+      jacksOriginalQuantity,
+      aliQuantity,
       requestedDate: formValue(data, "pickup_day"),
       fulfillment,
       deliveryAddress: formValue(data, "delivery_address"),
@@ -189,40 +193,36 @@ export function PublicOrderForm() {
         <form className="order-form" key="standard-order" onSubmit={handleStandardSubmit}>
           <div className="order-summary-card">
             <div>
-              <h3 className="art-heading everyday-art-heading">
-                <span>{cookieName}</span>
-                <Image src="/brand/headlines/the-everyday-solid-teal.png" alt="" width={1751} height={422} />
-              </h3>
+              <h3 className="flavor-order-title">Choose your cookies</h3>
               <p>Fresh Tuesday and Friday.</p>
             </div>
             <div className="price-total" aria-live="polite">
               <span>
-                {formatMoney(unitPrice)} each
+                {quantity} {quantity === 1 ? "cookie" : "cookies"}
                 {fulfillment === "delivery" ? ` + ${formatMoney(deliveryFee)} delivery` : ""}
               </span>
               <strong>{formatMoney(total)}</strong>
             </div>
           </div>
 
-          <label className="quantity-field">
-            Quantity
-            <input
-              name="quantity"
-              type="number"
-              min={standardMinimum}
-              max={maximumQuantity}
-              step={1}
-              value={quantityInput}
-              onChange={(event) => {
-                setQuantityInput(sanitizeQuantityInput(event.target.value));
-              }}
-              onBlur={() => {
-                setQuantityInput(String(normalizeQuantity(quantityInput, standardMinimum)));
-              }}
-              required
-            />
-            <span>$3 per cookie.</span>
-          </label>
+          <div className="flavor-quantity-grid">
+            <label className="quantity-field flavor-quantity-field">
+              <strong>Jack&apos;s Original</strong>
+              <em>The Chocolate Chip Cookie</em>
+              <input aria-label="Jack's Original quantity" name="jacks_original_quantity" type="number" min={0} max={maximumQuantity} step={1} value={jacksOriginalInput} onChange={(event) => setJacksOriginalInput(sanitizeQuantityInput(event.target.value))} onBlur={() => setJacksOriginalInput(String(normalizeFlavorQuantity(jacksOriginalInput)))} />
+              <span className="flavor-price">$3 each</span>
+              <span className="flavor-description">An organic chocolate chip cookie with hemp seeds and flaky salt.</span>
+            </label>
+            <label className="quantity-field flavor-quantity-field">
+              <strong>The Ali</strong>
+              <em>The Salted Hemp Seed Cookie</em>
+              <input aria-label="The Ali quantity" name="ali_quantity" type="number" min={0} max={maximumQuantity} step={1} value={aliInput} onChange={(event) => setAliInput(sanitizeQuantityInput(event.target.value))} onBlur={() => setAliInput(String(normalizeFlavorQuantity(aliInput)))} />
+              <span className="flavor-price">$2.75 each</span>
+              <span className="flavor-description">A buttery, organic chipless cookie with hemp seeds and flaky salt.</span>
+            </label>
+          </div>
+
+          {quantity < standardMinimum ? <p className="form-note warning flavor-minimum-note" role="status">Please choose at least {standardMinimum} cookies total.</p> : null}
 
           <fieldset className="date-select-field" aria-label="Date">
             {pickupDays.length > 0 ? (
@@ -322,7 +322,7 @@ export function PublicOrderForm() {
 
           <button
             className="public-button primary submit-button"
-            disabled={submitting || (fulfillment === "delivery" && deliveryEligible !== true)}
+            disabled={submitting || quantity < standardMinimum || quantity > maximumQuantity || (fulfillment === "delivery" && deliveryEligible !== true)}
             type="submit"
           >
             {submitting ? "Opening secure checkout..." : `Continue to checkout — ${formatMoney(total)}`}
@@ -646,6 +646,12 @@ function normalizeQuantity(value: string, minimum: number) {
 
   if (!Number.isFinite(quantity)) return minimum;
   return Math.min(maximumQuantity, Math.max(minimum, Math.floor(quantity)));
+}
+
+function normalizeFlavorQuantity(value: string) {
+  const quantity = Number(value);
+  if (!Number.isFinite(quantity)) return 0;
+  return Math.min(maximumQuantity, Math.max(0, Math.floor(quantity)));
 }
 
 function getAvailablePickupDays(now: Date): PickupDay[] {

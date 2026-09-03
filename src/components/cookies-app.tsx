@@ -1138,6 +1138,8 @@ function ProductionView({
                 </div>
                 <div className="card-actions">
                   <span className="pill teal">{order.cookie_count} cookies</span>
+                  {jacksOriginalCount(order) > 0 ? <span className="pill tan">{jacksOriginalCount(order)} Jack&apos;s Original</span> : null}
+                  {aliCount(order) > 0 ? <span className="pill tan">{aliCount(order)} The Ali</span> : null}
                   <DoughPreppedToggle order={order} onToggle={onToggleDoughPrepped} />
                 </div>
               </div>
@@ -1224,6 +1226,8 @@ function OrderCard({
         </span>
         <span className="pill tan">{order.cookie_size}</span>
         <span className="pill">{order.cookie_count} cookies</span>
+        {jacksOriginalCount(order) > 0 ? <span className="pill tan">{jacksOriginalCount(order)} Jack&apos;s Original</span> : null}
+        {aliCount(order) > 0 ? <span className="pill tan">{aliCount(order)} The Ali</span> : null}
         <span className="pill">{formatUnitMoney(invoiceTotal(order))}</span>
         <span className="pill green">profit {formatMoney(orderProfit(order))}</span>
         <span className={`pill ${isDoughPrepped(order) ? "green" : "red"}`}>
@@ -2332,6 +2336,16 @@ const doughPreppedMarker = "[Dough prepped]";
 
 function hasNoFlakySaltPreference(order: Pick<Order, "notes">) {
   return /\bNO FLAKY SALT\b/i.test(order.notes ?? "");
+}
+
+function jacksOriginalCount(order: Pick<Order, "notes">) {
+  const match = (order.notes ?? "").match(/Jack's Original:\s*(\d+)/i);
+  return match ? Number(match[1]) : 0;
+}
+
+function aliCount(order: Pick<Order, "notes">) {
+  const match = (order.notes ?? "").match(/The Ali:\s*(\d+)/i);
+  return match ? Number(match[1]) : 0;
 }
 
 function isDoughPrepped(order: Pick<Order, "dough_prepped" | "dough_prep">) {
