@@ -2176,6 +2176,10 @@ button {
   text-transform: none;
 }
 
+.flavor-description-mobile {
+  display: none;
+}
+
 .flavor-minimum-note {
   margin-top: -0.35rem;
 }
@@ -2687,6 +2691,16 @@ button {
 }
 
 @media (max-width: 520px) {
+  .flavor-description-desktop {
+    display: none;
+  }
+
+  .flavor-quantity-field > .flavor-description-mobile {
+    display: block;
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+
   html,
   body,
   .public-site,

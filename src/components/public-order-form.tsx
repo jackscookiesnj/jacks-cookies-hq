@@ -211,14 +211,16 @@ export function PublicOrderForm() {
               <em>The Chocolate Chip Cookie</em>
               <input aria-label="Jack's Original quantity" name="jacks_original_quantity" type="number" min={0} max={maximumQuantity} step={1} value={jacksOriginalInput} onChange={(event) => setJacksOriginalInput(sanitizeQuantityInput(event.target.value))} onBlur={() => setJacksOriginalInput(String(normalizeFlavorQuantity(jacksOriginalInput)))} />
               <span className="flavor-price">$3 each</span>
-              <span className="flavor-description">An organic chocolate chip cookie with hemp seeds and flaky salt.</span>
+              <span className="flavor-description flavor-description-desktop">An organic chocolate chip cookie with hemp seeds and flaky salt.</span>
+              <span className="flavor-description flavor-description-mobile">Organic chocolate chip, hemp seeds &amp; flaky salt.</span>
             </label>
             <label className="quantity-field flavor-quantity-field">
               <strong>The Ali</strong>
               <em>The Salted Hemp Seed Cookie</em>
               <input aria-label="The Ali quantity" name="ali_quantity" type="number" min={0} max={maximumQuantity} step={1} value={aliInput} onChange={(event) => setAliInput(sanitizeQuantityInput(event.target.value))} onBlur={() => setAliInput(String(normalizeFlavorQuantity(aliInput)))} />
               <span className="flavor-price">$2.75 each</span>
-              <span className="flavor-description">A buttery, organic chipless cookie with hemp seeds and flaky salt.</span>
+              <span className="flavor-description flavor-description-desktop">A buttery, organic chipless cookie with hemp seeds and flaky salt.</span>
+              <span className="flavor-description flavor-description-mobile">Organic chipless, hemp seeds &amp; flaky salt.</span>
             </label>
           </div>
 
@@ -639,13 +641,6 @@ function formValue(data: FormData, key: string) {
 
 function sanitizeQuantityInput(value: string) {
   return value.replace(/\D/g, "").slice(0, 4);
-}
-
-function normalizeQuantity(value: string, minimum: number) {
-  const quantity = Number(value);
-
-  if (!Number.isFinite(quantity)) return minimum;
-  return Math.min(maximumQuantity, Math.max(minimum, Math.floor(quantity)));
 }
 
 function normalizeFlavorQuantity(value: string) {
