@@ -9,6 +9,8 @@ const deliveryFee = 6;
 const standardMinimum = 3;
 const eventMinimum = 24;
 const maximumQuantity = 1000;
+const freeDeliveryCode = "FREEDELIVERY";
+const freeDeliveryZipCodes = new Set(["07701", "07702", "07704", "07733", "07739", "07748", "07760"]);
 
 type Fulfillment = "pickup" | "delivery";
 type OrderMode = "standard" | "event";
@@ -69,14 +71,22 @@ export function PublicOrderForm() {
   const [deliveryAddress, setDeliveryAddress] = useState("");
   const [deliveryCounty, setDeliveryCounty] = useState("");
   const [deliveryState, setDeliveryState] = useState("");
+  const [deliveryTown, setDeliveryTown] = useState("");
+  const [deliveryPostalCode, setDeliveryPostalCode] = useState("");
   const [deliveryEligible, setDeliveryEligible] = useState<boolean | null>(null);
+  const [discountCode, setDiscountCode] = useState("");
 
   const pickupDays = useMemo(() => getAvailablePickupDays(new Date()), []);
   const jacksOriginalQuantity = normalizeFlavorQuantity(jacksOriginalInput);
   const aliQuantity = normalizeFlavorQuantity(aliInput);
   const quantity = jacksOriginalQuantity + aliQuantity;
   const subtotal = jacksOriginalQuantity * jacksOriginalPrice + aliQuantity * aliPrice;
-  const total = subtotal + (fulfillment === "delivery" ? deliveryFee : 0);
+  const normalizedDiscountCode = discountCode.trim().toUpperCase();
+  const freeDeliveryApplied = fulfillment === "delivery" &&
+    normalizedDiscountCode === freeDeliveryCode &&
+    deliveryEligible === true &&
+    freeDeliveryZipCodes.has(deliveryPostalCode);
+  const total = subtotal + (fulfillment === "delivery" && !freeDeliveryApplied ? deliveryFee : 0);
 
   useEffect(() => {
     function syncModeFromHash() {
@@ -109,6 +119,9 @@ export function PublicOrderForm() {
       deliveryAddress: formValue(data, "delivery_address"),
       deliveryCounty: formValue(data, "delivery_county"),
       deliveryState: formValue(data, "delivery_state"),
+      deliveryTown: formValue(data, "delivery_town"),
+      deliveryPostalCode: formValue(data, "delivery_postal_code"),
+      discountCode: formValue(data, "discount_code"),
       noFlakySalt: data.get("no_flaky_salt") === "on",
       payment: formValue(data, "payment"),
       notes: formValue(data, "notes"),
@@ -199,7 +212,7 @@ export function PublicOrderForm() {
             <div className="price-total" aria-live="polite">
               <span>
                 {quantity} {quantity === 1 ? "cookie" : "cookies"}
-                {fulfillment === "delivery" ? ` + ${formatMoney(deliveryFee)} delivery` : ""}
+                {fulfillment === "delivery" ? freeDeliveryApplied ? " + free delivery" : ` + ${formatMoney(deliveryFee)} delivery` : ""}
               </span>
               <strong>{formatMoney(total)}</strong>
             </div>
@@ -266,16 +279,20 @@ export function PublicOrderForm() {
             <div className="delivery-address-block">
               <span className="field-label">Delivery address</span>
               <DeliveryAddressAutocomplete
-                onAddressSelected={({ address, county, state, eligible }) => {
+                onAddressSelected={({ address, county, state, town, postalCode, eligible }) => {
                   setDeliveryAddress(address);
                   setDeliveryCounty(county);
                   setDeliveryState(state);
+                  setDeliveryTown(town);
+                  setDeliveryPostalCode(postalCode);
                   setDeliveryEligible(eligible);
                 }}
               />
               <input name="delivery_address" type="hidden" value={deliveryAddress} />
               <input name="delivery_county" type="hidden" value={deliveryCounty} />
               <input name="delivery_state" type="hidden" value={deliveryState} />
+              <input name="delivery_town" type="hidden" value={deliveryTown} />
+              <input name="delivery_postal_code" type="hidden" value={deliveryPostalCode} />
               {deliveryEligible === true ? (
                 <span className="address-status valid">✓ Monmouth County delivery available</span>
               ) : null}
@@ -286,6 +303,24 @@ export function PublicOrderForm() {
               ) : null}
             </div>
           ) : null}
+
+          <label className="discount-code-field">
+            Discount code
+            <input
+              name="discount_code"
+              value={discountCode}
+              onChange={(event) => setDiscountCode(event.target.value.toUpperCase())}
+              placeholder="Enter code"
+              autoComplete="off"
+            />
+            {normalizedDiscountCode === freeDeliveryCode ? (
+              freeDeliveryApplied ? (
+                <span className="address-status valid">✓ FREEDELIVERY applied</span>
+              ) : (
+                <span className="form-note">FREEDELIVERY applies to delivery addresses in Red Bank, Rumson, Little Silver, Shrewsbury, Middletown, Holmdel, and Fair Haven.</span>
+              )
+            ) : null}
+          </label>
 
           <div className="public-form-grid">
             <label>
@@ -454,6 +489,8 @@ function DeliveryAddressAutocomplete({
     address: string;
     county: string;
     state: string;
+    town: string;
+    postalCode: string;
     eligible: boolean | null;
   }) => void;
 }) {
@@ -547,6 +584,8 @@ function DeliveryAddressAutocomplete({
     await place.fetchFields({ fields: ["formattedAddress", "addressComponents"] });
     const county = addressPart(place.addressComponents, "administrative_area_level_2");
     const state = addressPart(place.addressComponents, "administrative_area_level_1", true);
+    const town = addressPart(place.addressComponents, "locality") || addressPart(place.addressComponents, "postal_town");
+    const postalCode = addressPart(place.addressComponents, "postal_code");
     const address = place.formattedAddress ?? prediction.text.toString();
     const eligible = county.toLowerCase() === "monmouth county" && state === "NJ";
 
@@ -554,7 +593,7 @@ function DeliveryAddressAutocomplete({
     setSuggestions([]);
     const library = placesLibraryRef.current;
     sessionTokenRef.current = library ? new library.AutocompleteSessionToken() : null;
-    onAddressSelectedRef.current({ address, county, state, eligible });
+    onAddressSelectedRef.current({ address, county, state, town, postalCode, eligible });
   }
 
   return (
@@ -571,7 +610,7 @@ function DeliveryAddressAutocomplete({
           onChange={(event) => {
             setInputValue(event.target.value);
             setLoadError("");
-            onAddressSelectedRef.current({ address: "", county: "", state: "", eligible: null });
+            onAddressSelectedRef.current({ address: "", county: "", state: "", town: "", postalCode: "", eligible: null });
           }}
         />
         {suggestions.length > 0 ? (

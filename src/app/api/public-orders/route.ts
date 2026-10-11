@@ -11,6 +11,8 @@ const maximumQuantity = 1000;
 const deliveryFee = 6;
 const jacksOriginalPrice = 3;
 const aliPrice = 2.75;
+const freeDeliveryCode = "FREEDELIVERY";
+const freeDeliveryZipCodes = new Set(["07701", "07702", "07704", "07733", "07739", "07748", "07760"]);
 
 type PublicOrderPayload = {
   mode: "standard" | "event";
@@ -25,6 +27,9 @@ type PublicOrderPayload = {
   deliveryAddress?: string;
   deliveryCounty?: string;
   deliveryState?: string;
+  deliveryTown?: string;
+  deliveryPostalCode?: string;
+  discountCode?: string;
   noFlakySalt?: boolean;
   payment: string;
   notes?: string;
@@ -50,9 +55,10 @@ export async function POST(request: Request) {
     const cookieRevenue = payload.mode === "standard"
       ? (payload.jacksOriginalQuantity ?? payload.quantity) * jacksOriginalPrice + (payload.aliQuantity ?? 0) * aliPrice
       : payload.quantity * jacksOriginalPrice;
+    const freeDeliveryApplied = qualifiesForFreeDelivery(payload);
     const revenue = roundMoney(
       cookieRevenue +
-        (payload.mode === "standard" && payload.fulfillment === "delivery" ? deliveryFee : 0),
+        (payload.mode === "standard" && payload.fulfillment === "delivery" && !freeDeliveryApplied ? deliveryFee : 0),
     );
     const orderPayload = {
       customer_id: customer.id,
@@ -150,7 +156,7 @@ async function createSquareCheckout(
   if ((payload.jacksOriginalQuantity ?? 0) > 0) lineItems.push({ name: "Jack's Original — The Chocolate Chip Cookie", quantity: String(payload.jacksOriginalQuantity), base_price_money: { amount: 300, currency: "USD" } });
   if ((payload.aliQuantity ?? 0) > 0) lineItems.push({ name: "The Ali — The Salted Hemp Seed Cookie", quantity: String(payload.aliQuantity), base_price_money: { amount: 275, currency: "USD" } });
 
-  if (payload.fulfillment === "delivery") {
+  if (payload.fulfillment === "delivery" && !qualifiesForFreeDelivery(payload)) {
     lineItems.push({
       name: "Monmouth County delivery",
       quantity: "1",
@@ -266,12 +272,21 @@ function normalizePayload(input: unknown): PublicOrderPayload {
   const deliveryAddress = stringValue(data.deliveryAddress);
   const deliveryCounty = stringValue(data.deliveryCounty);
   const deliveryState = stringValue(data.deliveryState);
+  const deliveryTown = stringValue(data.deliveryTown);
+  const deliveryPostalCode = stringValue(data.deliveryPostalCode);
+  const discountCode = stringValue(data.discountCode).toUpperCase();
 
   if (mode === "standard" && fulfillment === "delivery") {
     if (!deliveryAddress) throw new Error("Please select a verified delivery address.");
     if (deliveryCounty.toLowerCase() !== "monmouth county" || deliveryState !== "NJ") {
       throw new Error("Delivery is only available within Monmouth County, New Jersey.");
     }
+  }
+  if (discountCode && discountCode !== freeDeliveryCode) {
+    throw new Error("That discount code is not valid.");
+  }
+  if (discountCode === freeDeliveryCode && (fulfillment !== "delivery" || !freeDeliveryZipCodes.has(deliveryPostalCode))) {
+    throw new Error("FREEDELIVERY is only valid for delivery addresses in the eligible local towns.");
   }
 
   return {
@@ -287,6 +302,9 @@ function normalizePayload(input: unknown): PublicOrderPayload {
     deliveryAddress,
     deliveryCounty,
     deliveryState,
+    deliveryTown,
+    deliveryPostalCode,
+    discountCode,
     noFlakySalt: data.noFlakySalt === true,
     payment: stringValue(data.payment) || "card",
     notes: stringValue(data.notes),
@@ -358,7 +376,7 @@ function buildOrderNotes(payload: PublicOrderPayload) {
   if (payload.mode === "standard") {
     lines.push(...standardFlavorLines(payload).map((line) => `${line}.`));
     lines.push(`Fulfillment: ${payload.fulfillment === "delivery" ? "Monmouth County delivery" : "Pickup"}.`);
-    if (payload.fulfillment === "delivery") lines.push(`Delivery fee: $${deliveryFee.toFixed(2)}.`);
+    if (payload.fulfillment === "delivery") lines.push(qualifiesForFreeDelivery(payload) ? "Delivery fee: FREE (FREEDELIVERY)." : `Delivery fee: $${deliveryFee.toFixed(2)}.`);
     if (payload.deliveryAddress) lines.push(`Delivery address: ${payload.deliveryAddress}.`);
     if (payload.noFlakySalt) lines.push("NO FLAKY SALT.");
   }
@@ -371,6 +389,13 @@ function buildOrderNotes(payload: PublicOrderPayload) {
 
   if (payload.notes) lines.push(`Customer notes: ${payload.notes}`);
   return lines.join("\n");
+}
+
+function qualifiesForFreeDelivery(payload: PublicOrderPayload) {
+  return payload.mode === "standard" &&
+    payload.fulfillment === "delivery" &&
+    payload.discountCode === freeDeliveryCode &&
+    freeDeliveryZipCodes.has(payload.deliveryPostalCode ?? "");
 }
 
 function customerAddress(payload: PublicOrderPayload) {
